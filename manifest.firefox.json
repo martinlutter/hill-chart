@@ -1,0 +1,28 @@
+{
+  "manifest_version": 2,
+  "name": "Hill Chart for GitHub",
+  "version": "0.1.0",
+  "description": "Add Basecamp-style Hill Charts to GitHub issues",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/issues/*"],
+      "js": ["content/index.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "scripts": ["background/service-worker.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "hillchart-github@hillchart.dev",
+      "strict_min_version": "109.0"
+    }
+  }
+}

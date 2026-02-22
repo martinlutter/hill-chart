@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-color-mode="dark" data-dark-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add dark mode · Issue #7 · octocat/example-repo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; }
+    .gh-header { padding: 16px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
+    .gh-header-title { font-size: 20px; }
+    .gh-header-actions { display: flex; gap: 8px; align-items: center; }
+    .js-discussion { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .timeline-comment { background: #161b22; border: 1px solid #30363d; border-radius: 6px; margin-bottom: 16px; }
+    .comment-body { padding: 16px; }
+    .comment-body.markdown-body { line-height: 1.5; }
+    .js-new-comment-form { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-top: 24px; }
+    .js-new-comment-form textarea { width: 100%; min-height: 100px; background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 8px; font-family: inherit; resize: vertical; }
+    .js-new-comment-form .form-actions { margin-top: 8px; display: flex; justify-content: flex-end; }
+    .btn-primary { background: #238636; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <div class="gh-header">
+    <div class="gh-header-title">
+      <span class="js-issue-title">#7 Add dark mode</span>
+    </div>
+    <div class="gh-header-actions">
+      <!-- The Hill Chart extension injects its button here -->
+    </div>
+  </div>
+
+  <div class="js-discussion" id="discussion_bucket">
+
+    <!-- Issue body with NO hill chart data -->
+    <div class="timeline-comment js-comment" id="issuecomment-10">
+      <div class="comment-body markdown-body" data-testid="issue-body">
+        <p>We should add dark mode support to the application.</p>
+        <p>This ticket has no hill chart data yet — used to test the "create from scratch" flow.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="js-discussion" style="max-width: 980px; margin: 0 auto; padding: 0 16px 24px;">
+    <form class="js-new-comment-form" action="/octocat/example-repo/issues/7/comments" method="post">
+      <div class="comment-form-contents">
+        <textarea
+          id="new_comment_field"
+          name="comment[body]"
+          placeholder="Leave a comment"
+          aria-label="Comment body"
+        ></textarea>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" data-disable-with="Submitting…">
+            Comment
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+</body>
+</html>
