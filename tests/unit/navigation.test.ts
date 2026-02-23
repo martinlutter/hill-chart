@@ -17,7 +17,7 @@ function makeMount() {
 
 describe('setupNavigation', () => {
   it('calls mount() immediately on setup', () => {
-    const { mount, cleanup } = makeMount()
+    const { mount } = makeMount()
     const teardown = setupNavigation(mount)
     expect(mount).toHaveBeenCalledOnce()
     teardown()

@@ -1,4 +1,3 @@
-import React from 'react'
 import type { HillPoint } from '../types/index.js'
 import {
   buildHillPath,
