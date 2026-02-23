@@ -1,4 +1,14 @@
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import type { HillPoint } from '../types/index.js'
+import { decode, encode } from '../data/codec.js'
+import { writeHillChartComment } from '../github/commentWriter.js'
+import { HillChartViewer } from './HillChartViewer.js'
+import { HillChartEditor } from './HillChartEditor.js'
+import { PointList } from './PointList.js'
+import { AddPointForm } from './AddPointForm.js'
+
+type PanelState = 'hidden' | 'viewing' | 'editing' | 'saving' | 'error'
 
 export interface HillChartWidgetProps {
   /** Raw innerHTML of the first issue body — contains the hillchart HTML comment block */
@@ -11,17 +21,208 @@ export interface HillChartWidgetProps {
   toolbarAnchor: Element | null
 }
 
-/**
- * Phase 5 stub — wires up the Portal entry point so the build and E2E
- * harness work end-to-end. Replaced with the full state machine in Phase 7.
- */
-export function HillChartWidget({ toolbarAnchor }: HillChartWidgetProps) {
-  if (!toolbarAnchor) return null
+export function HillChartWidget({
+  issueBodyText,
+  commentTextarea,
+  submitButton,
+  toolbarAnchor,
+}: HillChartWidgetProps) {
+  const [savedPoints, setSavedPoints] = useState<HillPoint[]>(() => {
+    const result = decode(issueBodyText)
+    return result.ok ? result.data.points : []
+  })
 
-  return createPortal(
-    <button className="hillchart-trigger-btn" type="button" data-testid="hillchart-button">
-      Hill Chart
-    </button>,
-    toolbarAnchor,
+  const [panelState, setPanelState] = useState<PanelState>('hidden')
+  const [draftPoints, setDraftPoints] = useState<HillPoint[]>([])
+  const [errorMsg, setErrorMsg] = useState('')
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  // Open / close the native <dialog> in sync with panelState
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (panelState !== 'hidden') {
+      if (!dialog.open) dialog.showModal()
+    } else {
+      if (dialog.open) dialog.close()
+    }
+  }, [panelState])
+
+  // Intercept the native Escape key so we control state ourselves
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const handleCancel = (e: Event) => {
+      e.preventDefault()
+      setPanelState('hidden')
+    }
+    dialog.addEventListener('cancel', handleCancel)
+    return () => dialog.removeEventListener('cancel', handleCancel)
+  }, [])
+
+  const openPanel = useCallback(() => {
+    if (savedPoints.length > 0) {
+      setPanelState('viewing')
+    } else {
+      setDraftPoints([])
+      setPanelState('editing')
+    }
+  }, [savedPoints])
+
+  const handleEditRequest = useCallback(() => {
+    setDraftPoints([...savedPoints])
+    setPanelState('editing')
+  }, [savedPoints])
+
+  const handleCancel = useCallback(() => {
+    if (savedPoints.length > 0) {
+      setPanelState('viewing')
+    } else {
+      setPanelState('hidden')
+    }
+  }, [savedPoints])
+
+  const handleSave = useCallback(async () => {
+    if (!commentTextarea || !submitButton) {
+      setErrorMsg('GitHub comment form not found — cannot save.')
+      setPanelState('error')
+      return
+    }
+    setPanelState('saving')
+    const encoded = encode({ version: '1', points: draftPoints })
+    const result = await writeHillChartComment(commentTextarea, submitButton, encoded)
+    if (result.ok) {
+      setSavedPoints(draftPoints)
+      setPanelState('viewing')
+    } else {
+      setErrorMsg(result.error ?? 'Unknown error')
+      setPanelState('error')
+    }
+  }, [commentTextarea, submitButton, draftPoints])
+
+  const handleAddPoint = useCallback((point: HillPoint) => {
+    setDraftPoints((prev) => [...prev, point])
+  }, [])
+
+  const handleUpdatePoint = useCallback((updated: HillPoint) => {
+    setDraftPoints((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+  }, [])
+
+  const handleDeletePoint = useCallback((id: string) => {
+    setDraftPoints((prev) => prev.filter((p) => p.id !== id))
+  }, [])
+
+  // ── Panel body ──────────────────────────────────────────────────────────
+  let panelBody: React.ReactNode = null
+  if (panelState === 'viewing') {
+    panelBody = (
+      <HillChartViewer points={savedPoints} onEditRequest={handleEditRequest} />
+    )
+  } else if (panelState === 'editing' || panelState === 'saving') {
+    panelBody = (
+      <>
+        <HillChartEditor points={draftPoints} onChange={setDraftPoints} />
+        <PointList
+          points={draftPoints}
+          onUpdate={handleUpdatePoint}
+          onDelete={handleDeletePoint}
+        />
+        <AddPointForm pointCount={draftPoints.length} onAdd={handleAddPoint} />
+      </>
+    )
+  } else if (panelState === 'error') {
+    panelBody = (
+      <>
+        <p className="hillchart-status hillchart-status-error">{errorMsg}</p>
+        <p className="hillchart-status">
+          Your changes have not been lost. You can try saving again.
+        </p>
+      </>
+    )
+  }
+
+  // ── Panel footer ────────────────────────────────────────────────────────
+  let panelFooter: React.ReactNode = null
+  if (panelState === 'editing') {
+    panelFooter = (
+      <>
+        <button type="button" className="btn btn-secondary" onClick={handleCancel} data-testid="hillchart-cancel">
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => { void handleSave() }}
+          data-testid="hillchart-save"
+        >
+          Save
+        </button>
+      </>
+    )
+  } else if (panelState === 'saving') {
+    panelFooter = (
+      <button type="button" className="btn btn-primary" disabled>
+        Saving…
+      </button>
+    )
+  } else if (panelState === 'error') {
+    panelFooter = (
+      <>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => setPanelState('editing')}
+        >
+          Back to edit
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => setPanelState('hidden')}
+        >
+          Close
+        </button>
+      </>
+    )
+  }
+
+  const panelTitle = panelState === 'viewing' ? 'Hill Chart' : 'Edit Hill Chart'
+
+  return (
+    <>
+      {toolbarAnchor &&
+        createPortal(
+          <button
+            className="hillchart-trigger-btn"
+            type="button"
+            data-testid="hillchart-button"
+            onClick={openPanel}
+          >
+            Hill Chart
+          </button>,
+          toolbarAnchor,
+        )}
+
+      <dialog ref={dialogRef} className="hillchart-panel" aria-label={panelTitle} data-testid="hillchart-panel">
+        <div className="hillchart-panel-header">
+          <span className="hillchart-panel-title">{panelTitle}</span>
+          <button
+            type="button"
+            className="hillchart-panel-close"
+            onClick={() => setPanelState('hidden')}
+            aria-label="Close Hill Chart panel"
+            data-testid="hillchart-panel-close"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="hillchart-panel-body">{panelBody}</div>
+
+        {panelFooter && (
+          <div className="hillchart-panel-footer">{panelFooter}</div>
+        )}
+      </dialog>
+    </>
   )
 }

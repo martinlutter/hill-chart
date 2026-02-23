@@ -36,6 +36,22 @@
 }
 
 /* ── Panel (rendered inside shadow DOM) ────────────────────────────────── */
+dialog.hillchart-panel {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Author-level display:flex overrides UA dialog:not([open]){display:none}.
+   Restore the hidden state explicitly so close() works as expected. */
+dialog.hillchart-panel:not([open]) {
+  display: none;
+}
+
+dialog.hillchart-panel::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
 .hillchart-panel {
   position: fixed;
   top: 0;

@@ -43,7 +43,7 @@ export function AddPointForm({ pointCount, onAdd }: AddPointFormProps) {
   }
 
   return (
-    <form className="add-point-form" onSubmit={handleSubmit}>
+    <form className="add-point-form" onSubmit={handleSubmit} data-testid="add-point-form">
       <input
         ref={labelRef}
         type="text"
@@ -51,6 +51,7 @@ export function AddPointForm({ pointCount, onAdd }: AddPointFormProps) {
         maxLength={40}
         className="add-point-label"
         aria-label="New point label"
+        data-testid="point-description-input"
         required
       />
       <input
@@ -61,7 +62,7 @@ export function AddPointForm({ pointCount, onAdd }: AddPointFormProps) {
         aria-label="New point color"
         title="Point color"
       />
-      <button type="submit" className="btn btn-secondary add-point-submit">
+      <button type="submit" className="btn btn-secondary add-point-submit" data-testid="add-point-submit">
         Add
       </button>
     </form>

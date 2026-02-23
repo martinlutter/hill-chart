@@ -3,11 +3,20 @@
  *
  * Tests are organised by implementation phase so progress is visible:
  *   ✅ Phase 5  — extension infrastructure (button injection, shadow DOM, re-mount)
- *   🔲 Phase 7  — widget UI (panel open/close, viewer, editor) — marked test.fixme
- *   🔲 Phase 7  — save / cancel flow                           — marked test.fixme
+ *   ✅ Phase 7  — widget UI (panel open/close, viewer, editor, save/cancel)
+ *
+ * Shadow DOM strategy:
+ *   - Light DOM elements (toolbar button, textarea): page.locator() directly
+ *   - Shadow DOM elements (panel, SVG, forms): inShadow(page).locator(...)
  */
 
 import { test, expect } from './extension.setup'
+import type { Page } from '@playwright/test'
+
+/** Scopes a locator chain inside the extension shadow root. */
+function inShadow(page: Page) {
+  return page.locator('#hillchart-extension-root')
+}
 
 // ── Phase 5: Extension Infrastructure ────────────────────────────────────────
 
@@ -102,73 +111,89 @@ test.describe('Turbo navigation re-mount', () => {
 // ── Phase 7: Widget UI ────────────────────────────────────────────────────────
 
 test.describe('Panel — open and close', () => {
-  test.fixme('clicking Hill Chart button opens a panel', async ({ loadFixture }) => {
+  test('clicking Hill Chart button opens a panel', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    await expect(page.locator('[data-testid="hillchart-panel"]')).toBeVisible()
+    await expect(inShadow(page).locator('[data-testid="hillchart-panel"]')).toBeVisible()
   })
 
-  test.fixme('panel has a close button that dismisses it', async ({ loadFixture }) => {
+  test('panel has a close button that dismisses it', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue.html')
+    const shadow = inShadow(page)
     await page.locator('[data-testid="hillchart-button"]').click()
-    await page.locator('[data-testid="hillchart-panel-close"]').click()
-    await expect(page.locator('[data-testid="hillchart-panel"]')).not.toBeVisible()
+    await shadow.locator('[data-testid="hillchart-panel-close"]').click()
+    await expect(shadow.locator('[data-testid="hillchart-panel"]')).not.toBeVisible()
   })
 })
 
 test.describe('Viewer — existing chart data', () => {
-  test.fixme('panel shows SVG circles matching existing chart data', async ({ loadFixture }) => {
+  test('panel shows SVG circles matching existing chart data', async ({ loadFixture }) => {
     // Fixture has 3 points: Login flow, JWT handling, Password reset
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    const circles = page.locator('[data-testid="hillchart-panel"] circle:not([fill="transparent"])')
+    // Viewer renders one colored circle per point (no transparent hit circles)
+    const circles = inShadow(page).locator('circle:not([fill="transparent"])')
     await expect(circles).toHaveCount(3)
   })
 
-  test.fixme('viewer shows an Edit Hill Chart button', async ({ loadFixture }) => {
+  test('viewer shows an Edit Hill Chart button', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    await expect(page.locator('button:has-text("Edit Hill Chart")')).toBeVisible()
+    await expect(inShadow(page).locator('button:has-text("Edit Hill Chart")')).toBeVisible()
   })
 })
 
 test.describe('Editor — empty issue', () => {
-  test.fixme('panel opens in edit mode when no chart data exists', async ({ loadFixture }) => {
+  test('panel opens in edit mode when no chart data exists', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue-empty.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    await expect(page.locator('[data-testid="add-point-form"]')).toBeVisible()
+    await expect(inShadow(page).locator('[data-testid="add-point-form"]')).toBeVisible()
   })
 
-  test.fixme('adding a point creates a circle on the SVG', async ({ loadFixture }) => {
+  test('adding a point creates a circle on the SVG', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue-empty.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    await page.locator('[data-testid="point-description-input"]').fill('Authentication')
-    await page.locator('[data-testid="add-point-submit"]').click()
-    await expect(page.locator('circle:not([fill="transparent"])')).toHaveCount(1)
-    await expect(page.locator('text=Authentication')).toBeVisible()
+    const shadow = inShadow(page)
+    await shadow.locator('[data-testid="point-description-input"]').fill('Authentication')
+    await shadow.locator('[data-testid="add-point-submit"]').click()
+    // Editor renders one transparent hit circle + one colored circle per point
+    await expect(shadow.locator('circle:not([fill="transparent"])')).toHaveCount(1)
+    // SVG <text> label is visible
+    await expect(shadow.locator('text=Authentication')).toBeVisible()
   })
 })
 
 test.describe('Save and cancel', () => {
-  test.fixme('clicking Save writes encoded data to the comment textarea', async ({ loadFixture }) => {
+  test('clicking Save writes encoded data to the comment textarea', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue-empty.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    await page.locator('[data-testid="point-description-input"]').fill('Auth')
-    await page.locator('[data-testid="add-point-submit"]').click()
-    await page.locator('[data-testid="hillchart-save"]').click()
+    const shadow = inShadow(page)
+
+    await shadow.locator('[data-testid="point-description-input"]').fill('Auth')
+    await shadow.locator('[data-testid="add-point-submit"]').click()
+    await shadow.locator('[data-testid="hillchart-save"]').click()
+
+    // Wait for save to complete: widget transitions to viewing state (Edit button appears)
+    await expect(shadow.locator('button:has-text("Edit Hill Chart")')).toBeVisible({
+      timeout: 5000,
+    })
+
+    // The fixture form has onsubmit="event.preventDefault()" so the value persists
     const textareaValue = await page.locator('#new_comment_field').inputValue()
     expect(textareaValue).toContain('<!-- hillchart')
   })
 
-  test.fixme('clicking Cancel discards changes and returns to viewer', async ({ loadFixture }) => {
+  test('clicking Cancel discards changes and returns to viewer', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    await page.locator('button:has-text("Edit Hill Chart")').click()
-    await page.locator('[data-testid="point-description-input"]').fill('New point')
-    await page.locator('[data-testid="add-point-submit"]').click()
-    await page.locator('[data-testid="hillchart-cancel"]').click()
-    // Should revert to viewer with original 3 points
-    const circles = page.locator('circle:not([fill="transparent"])')
-    await expect(circles).toHaveCount(3)
+    const shadow = inShadow(page)
+
+    await shadow.locator('button:has-text("Edit Hill Chart")').click()
+    await shadow.locator('[data-testid="point-description-input"]').fill('New point')
+    await shadow.locator('[data-testid="add-point-submit"]').click()
+    await shadow.locator('[data-testid="hillchart-cancel"]').click()
+
+    // Should revert to viewer with original 3 saved points (no transparent circles in viewer)
+    await expect(shadow.locator('circle:not([fill="transparent"])')).toHaveCount(3)
   })
 })

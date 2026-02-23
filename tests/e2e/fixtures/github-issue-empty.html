@@ -44,7 +44,7 @@
   </div>
 
   <div class="js-discussion" style="max-width: 980px; margin: 0 auto; padding: 0 16px 24px;">
-    <form class="js-new-comment-form" action="/octocat/example-repo/issues/7/comments" method="post">
+    <form class="js-new-comment-form" action="/octocat/example-repo/issues/7/comments" method="post" onsubmit="event.preventDefault()">
       <div class="comment-form-contents">
         <textarea
           id="new_comment_field"
