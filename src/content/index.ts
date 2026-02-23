@@ -1,37 +1,53 @@
 /**
  * Content script entry point.
- * Stub implementation: mounts a shadow DOM root to verify the extension loads.
- * Will be replaced with the full React widget in Phase 5.
+ * Creates a Shadow DOM host, injects scoped CSS, mounts the React widget,
+ * and re-mounts on Turbo/Pjax soft-navigation events.
  */
 
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import { detectIssuePage } from '../github/detector.js'
+import { setupNavigation } from '../github/navigation.js'
+import { HillChartWidget } from '../components/HillChartWidget.js'
+import styles from './styles.css?inline'
+
 function mount(): () => void {
+  const page = detectIssuePage()
+
+  if (!page.isIssuePage) {
+    // Not a GitHub issue page — nothing to do
+    return () => {}
+  }
+
+  // Create shadow host
   const host = document.createElement('div')
   host.id = 'hillchart-extension-root'
   document.body.appendChild(host)
 
+  // Attach shadow DOM and inject scoped CSS
   const shadow = host.attachShadow({ mode: 'open' })
-  const marker = document.createElement('div')
-  marker.textContent = 'Hill Chart extension loaded'
-  marker.style.cssText = 'display:none'  // hidden — just a DOM marker for tests
-  shadow.appendChild(marker)
+  const styleEl = document.createElement('style')
+  styleEl.textContent = styles
+  shadow.appendChild(styleEl)
+
+  // React render container inside the shadow root
+  const container = document.createElement('div')
+  shadow.appendChild(container)
+
+  const root = createRoot(container)
+  root.render(
+    React.createElement(HillChartWidget, {
+      issueBodyText: page.issueBodyText,
+      commentTextarea: page.commentTextarea,
+      submitButton: page.submitButton,
+      toolbarAnchor: page.toolbarAnchor,
+    }),
+  )
 
   return () => {
+    root.unmount()
     host.remove()
   }
 }
 
-let cleanup: (() => void) | null = null
-
-function handleNavigation(): void {
-  cleanup?.()
-  cleanup = null
-  cleanup = mount()
-}
-
-// Initial load
-handleNavigation()
-
-// Turbo Drive navigation (GitHub's SPA stack)
-document.addEventListener('turbo:load', handleNavigation)
-// Pjax fallback (older GitHub)
-document.addEventListener('pjax:end', handleNavigation)
+setupNavigation(mount)

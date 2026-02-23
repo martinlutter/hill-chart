@@ -1,2 +1,158 @@
-/* Hill Chart widget styles — loaded inside Shadow DOM — Phase 7 */
-/* TODO: implement */
+/* Hill Chart widget — scoped inside Shadow DOM, GitHub dark-theme palette */
+
+:host {
+  all: initial;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: #e6edf3;
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+/* ── Toolbar trigger button (portalled into .gh-header-actions) ─────────── */
+.hillchart-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #e6edf3;
+  background-color: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.hillchart-trigger-btn:hover {
+  background-color: #30363d;
+  border-color: #8b949e;
+}
+
+/* ── Panel (rendered inside shadow DOM) ────────────────────────────────── */
+.hillchart-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 680px;
+  max-width: 100vw;
+  height: 100vh;
+  background: #161b22;
+  border-left: 1px solid #30363d;
+  display: flex;
+  flex-direction: column;
+  z-index: 999999;
+  overflow: hidden;
+}
+
+.hillchart-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #30363d;
+}
+
+.hillchart-panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #e6edf3;
+}
+
+.hillchart-panel-close {
+  background: none;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px;
+}
+
+.hillchart-panel-close:hover { color: #e6edf3; }
+
+.hillchart-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hillchart-panel-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #30363d;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ── Shared button styles ───────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-secondary {
+  color: #e6edf3;
+  background-color: #21262d;
+  border-color: #30363d;
+}
+
+.btn-secondary:hover { background-color: #30363d; }
+
+.btn-primary {
+  color: #ffffff;
+  background-color: #238636;
+  border-color: #2ea043;
+}
+
+.btn-primary:hover { background-color: #2ea043; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── SVG hill chart ─────────────────────────────────────────────────────── */
+.hillchart-viewer,
+.hillchart-editor {
+  width: 100%;
+}
+
+.hillchart-edit-btn {
+  display: block;
+  margin: 8px auto 0;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #8b949e;
+  background: none;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.hillchart-edit-btn:hover {
+  color: #e6edf3;
+  border-color: #8b949e;
+}
+
+/* ── Status / error messages ────────────────────────────────────────────── */
+.hillchart-status {
+  font-size: 12px;
+  color: #8b949e;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.hillchart-status-error { color: #f85149; }
