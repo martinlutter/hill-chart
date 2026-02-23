@@ -4,6 +4,7 @@
  * Tests are organised by implementation phase so progress is visible:
  *   ✅ Phase 5  — extension infrastructure (button injection, shadow DOM, re-mount)
  *   ✅ Phase 7  — widget UI (panel open/close, viewer, editor, save/cancel)
+ *   ✅ Phase 8  — full E2E suite (drag interaction completes the required scenarios)
  *
  * Shadow DOM strategy:
  *   - Light DOM elements (toolbar button, textarea): page.locator() directly
@@ -160,6 +161,48 @@ test.describe('Editor — empty issue', () => {
     await expect(shadow.locator('circle:not([fill="transparent"])')).toHaveCount(1)
     // SVG <text> label is visible
     await expect(shadow.locator('text=Authentication')).toBeVisible()
+  })
+})
+
+test.describe('Drag interaction', () => {
+  test('dragging a point changes its x position on the hill', async ({ loadFixture }) => {
+    const page = await loadFixture('github-issue.html')
+    await page.locator('[data-testid="hillchart-button"]').click()
+    const shadow = inShadow(page)
+
+    // Switch to edit mode (fixture has existing data so viewer opens first)
+    await shadow.locator('button:has-text("Edit Hill Chart")').click()
+
+    // Get initial screen position and SVG cx of the "JWT handling" point (x=30)
+    const initialState = await page.evaluate(() => {
+      const host = document.getElementById('hillchart-extension-root')
+      const group = host?.shadowRoot?.querySelector<SVGGElement>('[data-point-id="bbbb-2222"]')
+      const hitCircle = group?.querySelector<SVGCircleElement>('circle[fill="transparent"]')
+      if (!hitCircle) return null
+      const rect = hitCircle.getBoundingClientRect()
+      return {
+        screenX: rect.left + rect.width / 2,
+        screenY: rect.top + rect.height / 2,
+        cx: parseFloat(hitCircle.getAttribute('cx') ?? '0'),
+      }
+    })
+    expect(initialState).not.toBeNull()
+
+    // Drag the point to the right
+    await page.mouse.move(initialState!.screenX, initialState!.screenY)
+    await page.mouse.down()
+    await page.mouse.move(initialState!.screenX + 80, initialState!.screenY, { steps: 10 })
+    await page.mouse.up()
+
+    // Assert the circle's cx increased (point moved right along the hill curve)
+    const newCx = await page.evaluate(() => {
+      const host = document.getElementById('hillchart-extension-root')
+      const group = host?.shadowRoot?.querySelector<SVGGElement>('[data-point-id="bbbb-2222"]')
+      const visibleCircle = group?.querySelector<SVGCircleElement>('circle:not([fill="transparent"])')
+      return visibleCircle ? parseFloat(visibleCircle.getAttribute('cx') ?? '0') : null
+    })
+    expect(newCx).not.toBeNull()
+    expect(newCx).toBeGreaterThan(initialState!.cx)
   })
 })
 
