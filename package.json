@@ -14,8 +14,6 @@
     "test:e2e:up": "docker compose -f docker-compose.test.yml up -d",
     "test:e2e:down": "docker compose -f docker-compose.test.yml down",
     "test:e2e": "npm run build && docker compose -f docker-compose.test.yml exec e2e bash -c 'xvfb-run --auto-servernum npx playwright test'",
-    "test:e2e:local": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
     "typecheck": "tsc -b",
     "lint": "eslint ."
   },
