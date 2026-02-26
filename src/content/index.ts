@@ -30,6 +30,17 @@ function mount(): () => void {
   styleEl.textContent = styles;
   shadow.appendChild(styleEl);
 
+  // Prevent keyboard events from leaking out of the shadow DOM
+  // so GitHub's single-key shortcuts (e.g. "l", "a", "g") don't fire
+  // while the user is typing in our inputs.
+  for (const eventType of ["keydown", "keypress", "keyup"] as const) {
+    shadow.addEventListener(eventType, (e) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        e.stopPropagation();
+      }
+    });
+  }
+
   // React render container inside the shadow root
   const container = document.createElement("div");
   shadow.appendChild(container);
