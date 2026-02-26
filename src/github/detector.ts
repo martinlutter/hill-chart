@@ -42,3 +42,12 @@ export function detectIssuePage(url = window.location.href): PageElements {
     issueBodyText: issueBodyEl?.innerHTML ?? "",
   };
 }
+
+/** Returns all elements on the page that could contain hillchart data. */
+export function findCommentBodies(): Element[] {
+  return Array.from(
+    document.querySelectorAll(
+      '[data-testid="issue-body-viewer"], [data-testid="comment-body"], .timeline-comment .comment-body',
+    ),
+  );
+}

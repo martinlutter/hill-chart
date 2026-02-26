@@ -51,17 +51,46 @@
             <p dir="auto">For some reason, the students are fascinated with dark interfaces and they won't stop asking for it.</p>
             <p dir="auto">Add a toggle button in the top right that will allow switching between dark and light mode.</p>
 
-            <!-- This HTML comment is invisible in rendered GitHub markdown.
-                 The Hill Chart extension reads it to render the chart.
-                 This fixture includes pre-existing hill chart data for testing the "view" state. -->
+            <!-- Legacy HTML comment kept for the side-panel widget (reads issueBodyText via innerHTML) -->
             <!-- hillchart
 {"version":"1","points":[{"id":"aaaa-1111","description":"Login flow","x":70,"y":64,"color":"#3b82f6"},{"id":"bbbb-2222","description":"JWT handling","x":30,"y":50,"color":"#10b981"},{"id":"cccc-3333","description":"Password reset","x":5,"y":5,"color":"#f59e0b"}]}
 hillchart -->
+
+            <!-- Rendered fenced code block (mirrors real GitHub DOM for ```hillchart) -->
+            <div class="snippet-clipboard-content notranslate position-relative overflow-auto">
+              <pre lang="hillchart" class="notranslate"><code class="notranslate">{"version":"1","points":[{"id":"aaaa-1111","description":"Login flow","x":70,"y":64,"color":"#3b82f6"},{"id":"bbbb-2222","description":"JWT handling","x":30,"y":50,"color":"#10b981"},{"id":"cccc-3333","description":"Password reset","x":5,"y":5,"color":"#f59e0b"}]}
+</code></pre>
+              <div class="zeroclipboard-container position-absolute right-0 top-0">
+                <clipboard-copy aria-label="Copy" class="ClipboardButton btn js-clipboard-copy m-2 p-0">Copy</clipboard-copy>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+  </div>
+
+  <!-- Timeline comments (mirrors GitHub's comment timeline) -->
+  <div style="max-width: 980px; margin: 0 auto; padding: 0 16px;">
+    <div class="timeline-comment" data-testid="timeline-comment">
+      <div data-testid="comment-body" class="markdown-body">
+        <p dir="auto">Updated the hill chart with latest progress on the API.</p>
+        <div class="snippet-clipboard-content notranslate position-relative overflow-auto">
+          <pre lang="hillchart" class="notranslate"><code class="notranslate">{"version":"1","points":[{"id":"dd-4444","description":"API design","x":85,"y":30,"color":"#8b5cf6"},{"id":"ee-5555","description":"Database schema","x":45,"y":100,"color":"#ef4444"}]}
+</code></pre>
+          <div class="zeroclipboard-container position-absolute right-0 top-0">
+            <clipboard-copy aria-label="Copy" class="ClipboardButton btn js-clipboard-copy m-2 p-0">Copy</clipboard-copy>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-comment" data-testid="timeline-comment-no-chart">
+      <div data-testid="comment-body-plain" class="markdown-body">
+        <p dir="auto">Looks good! Let me know when the dark mode toggle is ready for review.</p>
+      </div>
+    </div>
   </div>
 
   <!-- Comment box (mirrors GitHub's React-rendered CommentBox / MarkdownEditor structure) -->

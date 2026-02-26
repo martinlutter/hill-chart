@@ -11,15 +11,15 @@ const SAMPLE_DATA: ChartData = {
 }
 
 describe('encode', () => {
-  it('wraps JSON in an HTML comment block', () => {
+  it('wraps JSON in a fenced code block', () => {
     const encoded = encode(SAMPLE_DATA)
-    expect(encoded).toMatch(/^<!-- hillchart\n/)
-    expect(encoded).toMatch(/\nhillchart -->$/)
+    expect(encoded).toMatch(/^```hillchart\n/)
+    expect(encoded).toMatch(/\n```$/)
   })
 
   it('contains compact JSON of the data', () => {
     const encoded = encode(SAMPLE_DATA)
-    const inner = encoded.replace('<!-- hillchart\n', '').replace('\nhillchart -->', '')
+    const inner = encoded.replace('```hillchart\n', '').replace('\n```', '')
     expect(JSON.parse(inner)).toEqual(SAMPLE_DATA)
   })
 })
@@ -39,8 +39,8 @@ describe('decode', () => {
     expect((result as { ok: false; error: string }).error).toMatch(/No hillchart block found/)
   })
 
-  it('returns ok: false for corrupt JSON', () => {
-    const result = decode('<!-- hillchart\n{not valid json}\nhillchart -->')
+  it('returns ok: false for corrupt JSON in fenced block', () => {
+    const result = decode('```hillchart\n{not valid json}\n```')
     expect(result.ok).toBe(false)
     expect((result as { ok: false; error: string }).error).toMatch(/Invalid JSON/)
   })
@@ -55,14 +55,14 @@ describe('decode', () => {
   })
 
   it('returns ok: false for unknown version', () => {
-    const badVersion = '<!-- hillchart\n{"version":"2","points":[]}\nhillchart -->'
+    const badVersion = '```hillchart\n{"version":"2","points":[]}\n```'
     const result = decode(badVersion)
     expect(result.ok).toBe(false)
     expect((result as { ok: false; error: string }).error).toMatch(/Unknown version/)
   })
 
   it('applies safe defaults for missing optional fields', () => {
-    const minimal = '<!-- hillchart\n{"version":"1","points":[{}]}\nhillchart -->'
+    const minimal = '```hillchart\n{"version":"1","points":[{}]}\n```'
     const result = decode(minimal)
     expect(result.ok).toBe(true)
     if (result.ok) {
@@ -76,7 +76,7 @@ describe('decode', () => {
   })
 
   it('defaults points to [] when points field is missing', () => {
-    const noPoints = '<!-- hillchart\n{"version":"1"}\nhillchart -->'
+    const noPoints = '```hillchart\n{"version":"1"}\n```'
     const result = decode(noPoints)
     expect(result.ok).toBe(true)
     if (result.ok) {
@@ -85,7 +85,7 @@ describe('decode', () => {
   })
 
   it('clamps x/y values that are out of 0–100 range', () => {
-    const outOfRange = '<!-- hillchart\n{"version":"1","points":[{"id":"p1","description":"X","x":-10,"y":150,"color":"#fff"}]}\nhillchart -->'
+    const outOfRange = '```hillchart\n{"version":"1","points":[{"id":"p1","description":"X","x":-10,"y":150,"color":"#fff"}]}\n```'
     const result = decode(outOfRange)
     expect(result.ok).toBe(true)
     if (result.ok) {
@@ -105,12 +105,6 @@ describe('decode', () => {
     }
   })
 
-  it('handles whitespace variations in the block delimiters', () => {
-    const loose = '<!--  hillchart  \n{"version":"1","points":[]}\n  hillchart  -->'
-    const result = decode(loose)
-    expect(result.ok).toBe(true)
-  })
-
   it('preserves the size field when present', () => {
     const withSize = encode({
       version: '1',
@@ -120,6 +114,43 @@ describe('decode', () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.data.points[0].size).toBe(12)
+    }
+  })
+})
+
+describe('decode — legacy HTML comment format (backward compat)', () => {
+  it('decodes legacy HTML comment blocks', () => {
+    const legacy = '<!-- hillchart\n{"version":"1","points":[]}\nhillchart -->'
+    const result = decode(legacy)
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.points).toEqual([])
+    }
+  })
+
+  it('decodes legacy format with full point data', () => {
+    const legacy = `<!-- hillchart\n${JSON.stringify(SAMPLE_DATA)}\nhillchart -->`
+    const result = decode(legacy)
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data).toEqual(SAMPLE_DATA)
+    }
+  })
+
+  it('handles whitespace variations in legacy block delimiters', () => {
+    const loose = '<!--  hillchart  \n{"version":"1","points":[]}\n  hillchart  -->'
+    const result = decode(loose)
+    expect(result.ok).toBe(true)
+  })
+
+  it('prefers fenced format over legacy when both are present', () => {
+    const fencedData: ChartData = { version: '1', points: [{ id: 'new', description: 'New', x: 50, y: 50, color: '#f00' }] }
+    const legacyData: ChartData = { version: '1', points: [{ id: 'old', description: 'Old', x: 10, y: 10, color: '#0f0' }] }
+    const both = `\`\`\`hillchart\n${JSON.stringify(fencedData)}\n\`\`\`\n\n<!-- hillchart\n${JSON.stringify(legacyData)}\nhillchart -->`
+    const result = decode(both)
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.points[0].id).toBe('new')
     }
   })
 })

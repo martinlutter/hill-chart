@@ -1,8 +1,10 @@
 import type { ChartData, HillPoint, ParseResult } from '../types/index.js'
 
-const OPEN_TAG = '<!-- hillchart'
-const CLOSE_TAG = 'hillchart -->'
-const BLOCK_RE = /<!--\s*hillchart\s*([\s\S]*?)\s*hillchart\s*-->/
+// New format: fenced code block (survives GitHub markdown rendering)
+const FENCED_RE = /```hillchart\s*\n([\s\S]*?)\n\s*```/
+
+// Legacy format: HTML comment (stripped by GitHub's markdown renderer)
+const COMMENT_RE = /<!--\s*hillchart\s*([\s\S]*?)\s*hillchart\s*-->/
 
 function clamp(val: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, val))
@@ -20,11 +22,12 @@ function sanitizePoint(raw: Record<string, unknown>, index: number): HillPoint {
 }
 
 export function encode(data: ChartData): string {
-  return `${OPEN_TAG}\n${JSON.stringify(data)}\n${CLOSE_TAG}`
+  return `\`\`\`hillchart\n${JSON.stringify(data)}\n\`\`\``
 }
 
 export function decode(text: string): ParseResult {
-  const match = BLOCK_RE.exec(text)
+  // Try new fenced format first, then fall back to legacy HTML comment
+  const match = FENCED_RE.exec(text) ?? COMMENT_RE.exec(text)
   if (!match) {
     return { ok: false, error: 'No hillchart block found' }
   }

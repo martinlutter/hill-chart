@@ -8,6 +8,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { detectIssuePage } from "../github/detector.js";
 import { setupNavigation } from "../github/navigation.js";
+import { renderInlineCharts } from "../github/inlineRenderer.js";
 import { HillChartWidget } from "../components/HillChartWidget.js";
 import styles from "./styles.css?inline";
 
@@ -54,7 +55,10 @@ function mount(): () => void {
     }),
   );
 
+  const cleanupInline = renderInlineCharts();
+
   return () => {
+    cleanupInline();
     root.unmount();
     host.remove();
   };

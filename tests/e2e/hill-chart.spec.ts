@@ -206,6 +206,88 @@ test.describe('Drag interaction', () => {
   })
 })
 
+// ── Inline chart rendering ───────────────────────────────────────────────────
+
+test.describe('Inline chart rendering', () => {
+  test('inline chart SVG appears inside the issue body when chart data exists', async ({
+    loadFixture,
+  }) => {
+    const page = await loadFixture('github-issue.html')
+    await expect(
+      page.locator('[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]'),
+    ).toBeVisible({ timeout: 5000 })
+  })
+
+  test('inline chart SVG appears inside a timeline comment with chart data', async ({
+    loadFixture,
+  }) => {
+    const page = await loadFixture('github-issue.html')
+    await expect(
+      page.locator('[data-testid="comment-body"] [data-testid="hillchart-inline"]'),
+    ).toBeVisible({ timeout: 5000 })
+  })
+
+  test('no inline chart in comments without hillchart data', async ({ loadFixture }) => {
+    const page = await loadFixture('github-issue.html')
+    // Wait for inline charts to render
+    await expect(
+      page.locator('[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]'),
+    ).toBeVisible({ timeout: 5000 })
+
+    // The plain comment should NOT have an inline chart
+    await expect(
+      page.locator('[data-testid="comment-body-plain"] [data-testid="hillchart-inline"]'),
+    ).toHaveCount(0)
+  })
+
+  test('issue body inline chart shows correct number of point circles', async ({
+    loadFixture,
+  }) => {
+    const page = await loadFixture('github-issue.html')
+    // Issue body has 3 points (Login flow, JWT handling, Password reset)
+    const circles = page.locator(
+      '[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"] circle',
+    )
+    await expect(circles).toHaveCount(3, { timeout: 5000 })
+  })
+
+  test('timeline comment inline chart shows correct number of point circles', async ({
+    loadFixture,
+  }) => {
+    const page = await loadFixture('github-issue.html')
+    // Timeline comment has 2 points (API design, Database schema)
+    const circles = page.locator(
+      '[data-testid="comment-body"] [data-testid="hillchart-inline"] circle',
+    )
+    await expect(circles).toHaveCount(2, { timeout: 5000 })
+  })
+
+  test('no inline charts on empty issue fixture', async ({ loadFixture }) => {
+    const page = await loadFixture('github-issue-empty.html')
+    // Wait for extension to load
+    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('[data-testid="hillchart-inline"]')).toHaveCount(0)
+  })
+
+  test('only one inline chart per comment after turbo:load re-mount', async ({ loadFixture }) => {
+    const page = await loadFixture('github-issue.html')
+    await expect(
+      page.locator('[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]'),
+    ).toBeVisible({ timeout: 5000 })
+
+    await page.evaluate(() => document.dispatchEvent(new Event('turbo:load')))
+    await page.waitForTimeout(300)
+
+    // Still exactly one inline chart per comment body with data
+    await expect(
+      page.locator('[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]'),
+    ).toHaveCount(1)
+    await expect(
+      page.locator('[data-testid="comment-body"] [data-testid="hillchart-inline"]'),
+    ).toHaveCount(1)
+  })
+})
+
 test.describe('Save and cancel', () => {
   test('clicking Save writes encoded data to the comment textarea', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue-empty.html')
@@ -222,7 +304,7 @@ test.describe('Save and cancel', () => {
     })
 
     const textareaValue = await page.locator('#new_comment_field').inputValue()
-    expect(textareaValue).toContain('<!-- hillchart')
+    expect(textareaValue).toContain('```hillchart')
   })
 
   test('clicking Cancel discards changes and returns to viewer', async ({ loadFixture }) => {
