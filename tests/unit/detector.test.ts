@@ -64,12 +64,6 @@ describe('detectIssuePage — DOM element retrieval', () => {
     expect(result.commentTextarea?.tagName).toBe('TEXTAREA')
   })
 
-  it('finds submitButton via button[data-variant="primary"] inside MarkdownEditor', () => {
-    const result = detectIssuePage(ISSUE_URL)
-    expect(result.submitButton).not.toBeNull()
-    expect(result.submitButton?.dataset.variant).toBe('primary')
-  })
-
   it('finds toolbarAnchor via [data-component="PH_Actions"]', () => {
     const result = detectIssuePage(ISSUE_URL)
     expect(result.toolbarAnchor).not.toBeNull()
@@ -97,14 +91,13 @@ describe('detectIssuePage — missing DOM elements', () => {
     expect(result.issueBodyText).toBe('')
   })
 
-  it('returns null submitButton when CommentBox is absent', () => {
+  it('returns null commentTextarea when CommentBox is absent', () => {
     document.body.innerHTML = `
       <div data-testid="issue-body-viewer">
         <div data-testid="markdown-body" class="markdown-body"></div>
       </div>
     `
     const result = detectIssuePage(ISSUE_URL)
-    expect(result.submitButton).toBeNull()
     expect(result.commentTextarea).toBeNull()
   })
 })

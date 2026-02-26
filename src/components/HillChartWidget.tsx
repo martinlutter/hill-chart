@@ -15,8 +15,6 @@ export interface HillChartWidgetProps {
   issueBodyText: string
   /** GitHub's comment textarea — used for write-back */
   commentTextarea: HTMLTextAreaElement | null
-  /** The form's submit button — clicked after pre-filling the textarea */
-  submitButton: HTMLButtonElement | null
   /** Where to portal the "Hill Chart" trigger button in the host page */
   toolbarAnchor: Element | null
 }
@@ -24,7 +22,6 @@ export interface HillChartWidgetProps {
 export function HillChartWidget({
   issueBodyText,
   commentTextarea,
-  submitButton,
   toolbarAnchor,
 }: HillChartWidgetProps) {
   const [savedPoints, setSavedPoints] = useState<HillPoint[]>(() => {
@@ -82,23 +79,23 @@ export function HillChartWidget({
     }
   }, [savedPoints])
 
-  const handleSave = useCallback(async () => {
-    if (!commentTextarea || !submitButton) {
-      setErrorMsg('GitHub comment form not found — cannot save.')
+  const handleSave = useCallback(() => {
+    if (!commentTextarea) {
+      setErrorMsg('GitHub comment textarea not found — cannot save.')
       setPanelState('error')
       return
     }
     setPanelState('saving')
     const encoded = encode({ version: '1', points: draftPoints })
-    const result = await writeHillChartComment(commentTextarea, submitButton, encoded)
+    const result = writeHillChartComment(commentTextarea, encoded)
     if (result.ok) {
       setSavedPoints(draftPoints)
-      setPanelState('viewing')
+      setPanelState('hidden')
     } else {
       setErrorMsg(result.error ?? 'Unknown error')
       setPanelState('error')
     }
-  }, [commentTextarea, submitButton, draftPoints])
+  }, [commentTextarea, draftPoints])
 
   const handleAddPoint = useCallback((point: HillPoint) => {
     setDraftPoints((prev) => [...prev, point])

@@ -7,93 +7,55 @@ function makeTextarea(): HTMLTextAreaElement {
   return el
 }
 
-function makeButton(): HTMLButtonElement {
-  const el = document.createElement('button')
-  el.type = 'submit'
-  document.body.appendChild(el)
-  return el
-}
-
 beforeEach(() => {
   document.body.innerHTML = ''
-  vi.useFakeTimers()
 })
 
 describe('writeHillChartComment', () => {
-  it('sets the textarea value to the encoded string', async () => {
+  it('sets the textarea value to the encoded string', () => {
     const textarea = makeTextarea()
-    const button = makeButton()
     const encoded = '<!-- hillchart\n{"version":"1","points":[]}\nhillchart -->'
 
-    const promise = writeHillChartComment(textarea, button, encoded)
-    await vi.runAllTimersAsync()
-    await promise
+    writeHillChartComment(textarea, encoded)
 
     expect(textarea.value).toBe(encoded)
   })
 
-  it('dispatches a bubbling input event on the textarea', async () => {
+  it('appends to existing textarea content', () => {
     const textarea = makeTextarea()
-    const button = makeButton()
+    textarea.value = 'existing comment'
+
+    writeHillChartComment(textarea, 'encoded-data')
+
+    expect(textarea.value).toBe('existing comment\nencoded-data')
+  })
+
+  it('dispatches a bubbling input event on the textarea', () => {
+    const textarea = makeTextarea()
     const handler = vi.fn()
     textarea.addEventListener('input', handler)
 
-    const promise = writeHillChartComment(textarea, button, 'test')
-    await vi.runAllTimersAsync()
-    await promise
+    writeHillChartComment(textarea, 'test')
 
     expect(handler).toHaveBeenCalledOnce()
     expect(handler.mock.calls[0][0]).toBeInstanceOf(Event)
   })
 
-  it('clicks the submit button after the delay', async () => {
+  it('focuses the textarea', () => {
     const textarea = makeTextarea()
-    const button = makeButton()
-    const clickSpy = vi.spyOn(button, 'click')
+    const focusSpy = vi.spyOn(textarea, 'focus')
 
-    const promise = writeHillChartComment(textarea, button, 'test')
-    await vi.runAllTimersAsync()
-    await promise
+    writeHillChartComment(textarea, 'test')
 
-    expect(clickSpy).toHaveBeenCalledOnce()
+    expect(focusSpy).toHaveBeenCalledOnce()
   })
 
-  it('does not click the button before the 100ms delay elapses', async () => {
+  it('returns { ok: true } on success', () => {
     const textarea = makeTextarea()
-    const button = makeButton()
-    const clickSpy = vi.spyOn(button, 'click')
 
-    writeHillChartComment(textarea, button, 'test')
-    // Don't advance timers — button should not have been clicked yet
-    expect(clickSpy).not.toHaveBeenCalled()
-
-    await vi.runAllTimersAsync()
-  })
-
-  it('returns { ok: true } on success', async () => {
-    const textarea = makeTextarea()
-    const button = makeButton()
-
-    const promise = writeHillChartComment(textarea, button, 'test')
-    await vi.runAllTimersAsync()
-    const result = await promise
+    const result = writeHillChartComment(textarea, 'test')
 
     expect(result.ok).toBe(true)
     expect(result.error).toBeUndefined()
-  })
-
-  it('returns { ok: false } when button.click() throws', async () => {
-    const textarea = makeTextarea()
-    const button = makeButton()
-    vi.spyOn(button, 'click').mockImplementation(() => {
-      throw new Error('Submit blocked')
-    })
-
-    const promise = writeHillChartComment(textarea, button, 'test')
-    await vi.runAllTimersAsync()
-    const result = await promise
-
-    expect(result.ok).toBe(false)
-    expect(result.error).toContain('Submit blocked')
   })
 })

@@ -50,7 +50,6 @@ function mount(): () => void {
     React.createElement(HillChartWidget, {
       issueBodyText: page.issueBodyText,
       commentTextarea: page.commentTextarea,
-      submitButton: page.submitButton,
       toolbarAnchor: page.toolbarAnchor,
     }),
   );

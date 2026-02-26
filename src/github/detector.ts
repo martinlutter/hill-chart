@@ -1,7 +1,6 @@
 export interface PageElements {
   isIssuePage: boolean;
   commentTextarea: HTMLTextAreaElement | null;
-  submitButton: HTMLButtonElement | null;
   toolbarAnchor: Element | null;
   /** Raw innerHTML of the first issue body comment — contains the hillchart HTML comment block */
   issueBodyText: string;
@@ -14,7 +13,6 @@ export function detectIssuePage(url = window.location.href): PageElements {
   const empty: PageElements = {
     isIssuePage: false,
     commentTextarea: null,
-    submitButton: null,
     toolbarAnchor: null,
     issueBodyText: "",
   };
@@ -35,15 +33,11 @@ export function detectIssuePage(url = window.location.href): PageElements {
   const commentTextarea = document.querySelector<HTMLTextAreaElement>(
     '[class^="CommentBox"] fieldset[class^="MarkdownEditor"] textarea',
   );
-  const submitButton = document.querySelector<HTMLButtonElement>(
-    '[class^="CommentBox"] fieldset[class^="MarkdownEditor"] button[data-variant="primary"]',
-  );
   const toolbarAnchor = document.querySelector('[data-component="PH_Actions"]');
 
   return {
     isIssuePage: true,
     commentTextarea,
-    submitButton,
     toolbarAnchor,
     issueBodyText: issueBodyEl?.innerHTML ?? "",
   };

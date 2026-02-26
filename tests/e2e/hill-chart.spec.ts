@@ -216,12 +216,11 @@ test.describe('Save and cancel', () => {
     await shadow.locator('[data-testid="add-point-submit"]').click()
     await shadow.locator('[data-testid="hillchart-save"]').click()
 
-    // Wait for save to complete: widget transitions to viewing state (Edit button appears)
-    await expect(shadow.locator('button:has-text("Edit Hill Chart")')).toBeVisible({
+    // Save closes the panel and appends encoded data to the textarea
+    await expect(shadow.locator('[data-testid="hillchart-panel"]')).not.toBeVisible({
       timeout: 5000,
     })
 
-    // The fixture form has onsubmit="event.preventDefault()" so the value persists
     const textareaValue = await page.locator('#new_comment_field').inputValue()
     expect(textareaValue).toContain('<!-- hillchart')
   })
