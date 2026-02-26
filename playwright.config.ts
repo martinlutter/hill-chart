@@ -18,8 +18,8 @@ export default defineConfig({
     {
       name: "chrome-extension",
       use: {
+        browserName: "chromium",
         // launchPersistentContext is handled in tests/e2e/extension.setup.ts
-        // The EXTENSION_PATH env var is consumed there
         launchOptions: {
           args: [
             `--disable-extensions-except=${EXTENSION_PATH}`,

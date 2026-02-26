@@ -42,12 +42,12 @@ test.describe('Button injection', () => {
     })
   })
 
-  test('button is inside .gh-header-actions', async ({ loadFixture }) => {
+  test('button is inside [data-component="PH_Actions"]', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue.html')
 
     // The button is portalled directly into the GitHub header toolbar
     await expect(
-      page.locator('.gh-header-actions [data-testid="hillchart-button"]'),
+      page.locator('[data-component="PH_Actions"] [data-testid="hillchart-button"]'),
     ).toBeVisible({ timeout: 5000 })
   })
 })

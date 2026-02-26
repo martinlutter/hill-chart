@@ -1,20 +1,29 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { detectIssuePage } from '../../src/github/detector.js'
 
-const ISSUE_URL = 'https://github.com/octocat/example-repo/issues/42'
+const ISSUE_URL = 'https://github.com/martinlutter/skills-expand-your-team-with-copilot/issues/9'
 
 function buildDOM() {
   document.body.innerHTML = `
-    <div class="gh-header-actions"></div>
-    <div class="js-discussion">
-      <div class="timeline-comment">
-        <div class="comment-body">Issue body text <!-- hillchart\n{}\nhillchart --></div>
+    <div data-testid="issue-header">
+      <bdi data-testid="issue-title">Dark Mode</bdi>
+      <div data-component="PH_Actions"></div>
+    </div>
+    <div data-testid="issue-viewer-container">
+      <div data-testid="issue-body">
+        <div data-testid="issue-body-viewer">
+          <div data-testid="markdown-body" class="markdown-body">
+            <div class="markdown-body">Issue body text <!-- hillchart\n{}\nhillchart --></div>
+          </div>
+        </div>
       </div>
     </div>
-    <form class="js-new-comment-form">
-      <textarea id="new_comment_field"></textarea>
-      <button type="submit" class="btn btn-primary">Comment</button>
-    </form>
+    <div class="CommentBox-root">
+      <fieldset class="MarkdownEditor-root">
+        <textarea id="new_comment_field"></textarea>
+        <button type="submit" data-variant="primary">Comment</button>
+      </fieldset>
+    </div>
   `
 }
 
@@ -49,32 +58,22 @@ describe('detectIssuePage — URL detection', () => {
 })
 
 describe('detectIssuePage — DOM element retrieval', () => {
-  it('finds issueBodyEl via .js-discussion .timeline-comment .comment-body', () => {
-    const result = detectIssuePage(ISSUE_URL)
-    expect(result.issueBodyEl).not.toBeNull()
-  })
-
-  it('finds commentFormEl via form.js-new-comment-form', () => {
-    const result = detectIssuePage(ISSUE_URL)
-    expect(result.commentFormEl).not.toBeNull()
-    expect(result.commentFormEl?.tagName).toBe('FORM')
-  })
-
-  it('finds commentTextarea via #new_comment_field', () => {
+  it('finds commentTextarea via [class^="CommentBox"] fieldset[class^="MarkdownEditor"] textarea', () => {
     const result = detectIssuePage(ISSUE_URL)
     expect(result.commentTextarea).not.toBeNull()
-    expect(result.commentTextarea?.id).toBe('new_comment_field')
+    expect(result.commentTextarea?.tagName).toBe('TEXTAREA')
   })
 
-  it('finds submitButton via button[type="submit"].btn-primary inside the form', () => {
+  it('finds submitButton via button[data-variant="primary"] inside MarkdownEditor', () => {
     const result = detectIssuePage(ISSUE_URL)
     expect(result.submitButton).not.toBeNull()
-    expect(result.submitButton?.type).toBe('submit')
+    expect(result.submitButton?.dataset.variant).toBe('primary')
   })
 
-  it('finds toolbarAnchor via .gh-header-actions', () => {
+  it('finds toolbarAnchor via [data-component="PH_Actions"]', () => {
     const result = detectIssuePage(ISSUE_URL)
     expect(result.toolbarAnchor).not.toBeNull()
+    expect((result.toolbarAnchor as HTMLElement).dataset.component).toBe('PH_Actions')
   })
 
   it('populates issueBodyText with innerHTML of the issue body element', () => {
@@ -84,24 +83,29 @@ describe('detectIssuePage — DOM element retrieval', () => {
 })
 
 describe('detectIssuePage — missing DOM elements', () => {
-  it('returns null elements when issue body is absent', () => {
+  it('returns empty issueBodyText when issue body is absent', () => {
     document.body.innerHTML = `
-      <form class="js-new-comment-form">
-        <textarea id="new_comment_field"></textarea>
-        <button type="submit" class="btn btn-primary">Comment</button>
-      </form>
+      <div class="CommentBox-root">
+        <fieldset class="MarkdownEditor-root">
+          <textarea></textarea>
+          <button data-variant="primary">Comment</button>
+        </fieldset>
+      </div>
     `
     const result = detectIssuePage(ISSUE_URL)
     expect(result.isIssuePage).toBe(true)
-    expect(result.issueBodyEl).toBeNull()
     expect(result.issueBodyText).toBe('')
   })
 
-  it('returns null submitButton when form is absent', () => {
-    document.body.innerHTML = `<div class="js-discussion"><div class="timeline-comment"><div class="comment-body"></div></div></div>`
+  it('returns null submitButton when CommentBox is absent', () => {
+    document.body.innerHTML = `
+      <div data-testid="issue-body-viewer">
+        <div data-testid="markdown-body" class="markdown-body"></div>
+      </div>
+    `
     const result = detectIssuePage(ISSUE_URL)
     expect(result.submitButton).toBeNull()
-    expect(result.commentFormEl).toBeNull()
+    expect(result.commentTextarea).toBeNull()
   })
 })
 
@@ -109,7 +113,6 @@ describe('detectIssuePage — non-issue page returns all nulls', () => {
   it('returns empty result for a list URL', () => {
     const result = detectIssuePage('https://github.com/octocat/repo/issues')
     expect(result.isIssuePage).toBe(false)
-    expect(result.issueBodyEl).toBeNull()
     expect(result.commentTextarea).toBeNull()
     expect(result.toolbarAnchor).toBeNull()
     expect(result.issueBodyText).toBe('')

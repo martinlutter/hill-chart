@@ -1,51 +1,56 @@
 <!DOCTYPE html>
-<html lang="en" data-color-mode="dark" data-dark-theme="dark">
+<html lang="en" data-color-mode="auto" data-light-theme="light" data-dark-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Add dark mode · Issue #7 · octocat/example-repo</title>
+  <title>Dark Mode · Issue #9 · martinlutter/skills-expand-your-team-with-copilot</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; }
-    .gh-header { padding: 16px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
-    .gh-header-title { font-size: 20px; }
-    .gh-header-actions { display: flex; gap: 8px; align-items: center; }
-    .js-discussion { max-width: 980px; margin: 24px auto; padding: 0 16px; }
-    .timeline-comment { background: #161b22; border: 1px solid #30363d; border-radius: 6px; margin-bottom: 16px; }
-    .comment-body { padding: 16px; }
-    .comment-body.markdown-body { line-height: 1.5; }
-    .js-new-comment-form { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-top: 24px; }
-    .js-new-comment-form textarea { width: 100%; min-height: 100px; background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 8px; font-family: inherit; resize: vertical; }
-    .js-new-comment-form .form-actions { margin-top: 8px; display: flex; justify-content: flex-end; }
-    .btn-primary { background: #238636; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
+    [data-testid="issue-header"] { padding: 16px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
+    [data-component="PH_Actions"] { display: flex; gap: 8px; align-items: center; }
+    [data-testid="issue-viewer-container"] { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    [data-testid="issue-body"] { background: #161b22; border: 1px solid #30363d; border-radius: 6px; margin-bottom: 16px; }
+    [data-testid="issue-body-viewer"] { padding: 16px; }
+    .markdown-body { line-height: 1.5; }
+    .markdown-body p { margin-bottom: 8px; }
+    [class^="CommentBox"] { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-top: 24px; }
+    [class^="CommentBox"] textarea { width: 100%; min-height: 100px; background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 8px; font-family: inherit; resize: vertical; }
+    [class^="CommentBox"] .form-actions { margin-top: 8px; display: flex; justify-content: flex-end; }
+    [data-variant="primary"] { background: #238636; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
   </style>
 </head>
 <body>
 
-  <div class="gh-header">
-    <div class="gh-header-title">
-      <span class="js-issue-title">#7 Add dark mode</span>
-    </div>
-    <div class="gh-header-actions">
-      <!-- The Hill Chart extension injects its button here -->
+  <div data-testid="issue-header">
+    <h1>
+      <bdi data-testid="issue-title">Dark Mode</bdi>
+      <span>#9</span>
+    </h1>
+    <!-- The Hill Chart extension injects its button here -->
+    <div data-component="PH_Actions">
     </div>
   </div>
 
-  <div class="js-discussion" id="discussion_bucket">
+  <div data-testid="issue-viewer-container">
 
-    <!-- Issue body with NO hill chart data -->
-    <div class="timeline-comment js-comment" id="issuecomment-10">
-      <div class="comment-body markdown-body" data-testid="issue-body">
-        <p>We should add dark mode support to the application.</p>
-        <p>This ticket has no hill chart data yet — used to test the "create from scratch" flow.</p>
+    <!-- Issue body with NO hill chart data — used to test the "create from scratch" flow -->
+    <div data-testid="issue-body">
+      <div data-testid="issue-body-viewer">
+        <div data-testid="markdown-body" class="markdown-body">
+          <div class="markdown-body">
+            <p dir="auto">For some reason, the students are fascinated with dark interfaces and they won't stop asking for it.</p>
+            <p dir="auto">Add a toggle button in the top right that will allow switching between dark and light mode.</p>
+          </div>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <div class="js-discussion" style="max-width: 980px; margin: 0 auto; padding: 0 16px 24px;">
-    <form class="js-new-comment-form" action="/octocat/example-repo/issues/7/comments" method="post" onsubmit="event.preventDefault()">
-      <div class="comment-form-contents">
+  <div style="max-width: 980px; margin: 0 auto; padding: 0 16px 24px;">
+    <div class="CommentBox-root">
+      <fieldset class="MarkdownEditor-root">
         <textarea
           id="new_comment_field"
           name="comment[body]"
@@ -53,12 +58,12 @@
           aria-label="Comment body"
         ></textarea>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary" data-disable-with="Submitting…">
+          <button type="submit" data-variant="primary" data-disable-with="Submitting…">
             Comment
           </button>
         </div>
-      </div>
-    </form>
+      </fieldset>
+    </div>
   </div>
 
 </body>

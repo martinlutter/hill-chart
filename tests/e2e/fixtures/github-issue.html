@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-color-mode="dark" data-dark-theme="dark">
+<html lang="en" data-color-mode="auto" data-light-theme="light" data-dark-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Implement user authentication · Issue #42 · octocat/example-repo</title>
+  <title>Dark Mode · Issue #9 · martinlutter/skills-expand-your-team-with-copilot</title>
   <style>
     /* Minimal GitHub-like base styles for fixture page */
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,67 +13,61 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 14px;
     }
-    .gh-header { padding: 16px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
-    .gh-header-title { font-size: 20px; }
-    .gh-header-actions { display: flex; gap: 8px; align-items: center; }
-    .js-discussion { max-width: 980px; margin: 24px auto; padding: 0 16px; }
-    .timeline-comment { background: #161b22; border: 1px solid #30363d; border-radius: 6px; margin-bottom: 16px; }
-    .comment-body { padding: 16px; }
-    .comment-body.markdown-body { line-height: 1.5; }
-    .js-new-comment-form { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-top: 24px; }
-    .js-new-comment-form textarea { width: 100%; min-height: 100px; background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 8px; font-family: inherit; resize: vertical; }
-    .js-new-comment-form .form-actions { margin-top: 8px; display: flex; justify-content: flex-end; }
-    .btn-primary { background: #238636; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
-    .btn-primary:hover { background: #2ea043; }
+    [data-testid="issue-header"] { padding: 16px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
+    [data-component="PH_Actions"] { display: flex; gap: 8px; align-items: center; }
+    [data-testid="issue-viewer-container"] { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    [data-testid="issue-body"] { background: #161b22; border: 1px solid #30363d; border-radius: 6px; margin-bottom: 16px; }
+    [data-testid="issue-body-viewer"] { padding: 16px; }
+    .markdown-body { line-height: 1.5; }
+    .markdown-body p { margin-bottom: 8px; }
+    [class^="CommentBox"] { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-top: 24px; }
+    [class^="CommentBox"] textarea { width: 100%; min-height: 100px; background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 8px; font-family: inherit; resize: vertical; }
+    [class^="CommentBox"] .form-actions { margin-top: 8px; display: flex; justify-content: flex-end; }
+    [data-variant="primary"] { background: #238636; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
+    [data-variant="primary"]:hover { background: #2ea043; }
   </style>
 </head>
 <body>
 
-  <!-- GitHub issue header area -->
-  <div class="gh-header">
-    <div class="gh-header-title">
-      <span class="js-issue-title">#42 Implement user authentication</span>
-    </div>
-    <div class="gh-header-actions">
-      <!-- The Hill Chart extension injects its button here -->
+  <!-- GitHub issue header (mirrors data-testid="issue-header" from real GitHub page) -->
+  <div data-testid="issue-header">
+    <h1>
+      <bdi data-testid="issue-title">Dark Mode</bdi>
+      <span>#9</span>
+    </h1>
+    <!-- The Hill Chart extension injects its button here (mirrors data-component="PH_Actions") -->
+    <div data-component="PH_Actions">
     </div>
   </div>
 
-  <!-- Main issue discussion thread -->
-  <div class="js-discussion" id="discussion_bucket">
+  <!-- Main issue viewer (mirrors data-testid="issue-viewer-container" from real GitHub page) -->
+  <div data-testid="issue-viewer-container">
 
-    <!-- Issue body (first comment is always the issue description) -->
-    <div class="timeline-comment js-comment" id="issuecomment-1">
-      <div class="comment-body markdown-body" data-testid="issue-body">
-        <p>We need to implement user authentication for the application. This includes:</p>
-        <ul>
-          <li>Login / logout flow</li>
-          <li>JWT token handling</li>
-          <li>Password reset</li>
-        </ul>
+    <!-- Issue body (mirrors data-testid="issue-body" > "issue-body-viewer" > "markdown-body") -->
+    <div data-testid="issue-body">
+      <div data-testid="issue-body-viewer">
+        <div data-testid="markdown-body" class="markdown-body">
+          <div class="markdown-body">
+            <p dir="auto">For some reason, the students are fascinated with dark interfaces and they won't stop asking for it.</p>
+            <p dir="auto">Add a toggle button in the top right that will allow switching between dark and light mode.</p>
 
-        <!-- This HTML comment is invisible in rendered GitHub markdown.
-             The Hill Chart extension reads it to render the chart.
-             This fixture includes pre-existing hill chart data for testing the "view" state. -->
-        <!-- hillchart
+            <!-- This HTML comment is invisible in rendered GitHub markdown.
+                 The Hill Chart extension reads it to render the chart.
+                 This fixture includes pre-existing hill chart data for testing the "view" state. -->
+            <!-- hillchart
 {"version":"1","points":[{"id":"aaaa-1111","description":"Login flow","x":70,"y":64,"color":"#3b82f6"},{"id":"bbbb-2222","description":"JWT handling","x":30,"y":50,"color":"#10b981"},{"id":"cccc-3333","description":"Password reset","x":5,"y":5,"color":"#f59e0b"}]}
 hillchart -->
-      </div>
-    </div>
-
-    <!-- A subsequent comment with no hill chart data (for testing comment timeline) -->
-    <div class="timeline-comment js-comment" id="issuecomment-2">
-      <div class="comment-body markdown-body">
-        <p>I'll start with the login flow and JWT handling this sprint.</p>
+          </div>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Leave a comment form -->
-  <div class="js-discussion" style="max-width: 980px; margin: 0 auto; padding: 0 16px 24px;">
-    <form class="js-new-comment-form" action="/octocat/example-repo/issues/42/comments" method="post" onsubmit="event.preventDefault()">
-      <div class="comment-form-contents">
+  <!-- Comment box (mirrors GitHub's React-rendered CommentBox / MarkdownEditor structure) -->
+  <div style="max-width: 980px; margin: 0 auto; padding: 0 16px 24px;">
+    <div class="CommentBox-root">
+      <fieldset class="MarkdownEditor-root">
         <textarea
           id="new_comment_field"
           name="comment[body]"
@@ -81,12 +75,12 @@ hillchart -->
           aria-label="Comment body"
         ></textarea>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary" data-disable-with="Submitting…">
+          <button type="submit" data-variant="primary" data-disable-with="Submitting…">
             Comment
           </button>
         </div>
-      </div>
-    </form>
+      </fieldset>
+    </div>
   </div>
 
 </body>
