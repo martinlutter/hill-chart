@@ -2,6 +2,14 @@
   "name": "hill-chart",
   "private": true,
   "version": "0.1.0",
+  "description": "Browser extension that embeds interactive Hill Charts into GitHub issue pages",
+  "author": "Martin Lutter",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/martinlutter/hill-chart"
+  },
+  "keywords": ["hill-chart", "github", "browser-extension", "chrome-extension", "firefox-extension"],
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",
