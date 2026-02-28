@@ -1,6 +1,6 @@
 # Hill Chart for GitHub
 
-A browser extension that adds interactive [Basecamp-style Hill Charts](https://basecamp.com/features/hill-charts) to GitHub issues. Track where work stands — no tokens, no setup, just install and go.
+A browser extension that adds interactive [Basecamp-style Hill Charts](https://basecamp.com/hill-charts) to GitHub issues. Track where work stands — no tokens, no setup, just install and go.
 
 <p align="left">
   <img src="docs/screenshots/editor.png" alt="Hill Chart editor — drag points along the curve to track progress" width="700">
@@ -15,7 +15,7 @@ A browser extension that adds interactive [Basecamp-style Hill Charts](https://b
 
 Data is saved directly through GitHub's comment form (no API token required). Chart data lives inside the issue itself as a `` ```hillchart `` code block, so it travels with the issue and doesn't depend on any external service.
 
-**Left side** = "Figuring things out" (uncertainty, research, design)
+**Left side** = "Figuring things out" (uncertainty, research, design)  
 **Right side** = "Making it happen" (execution, known work)
 
 <p align="left">
