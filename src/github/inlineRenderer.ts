@@ -163,6 +163,35 @@ function findHideTarget(pre: HTMLElement): HTMLElement {
 }
 
 /**
+ * Watches for dynamically added hillchart code blocks (e.g. new comments, soft-nav late loads)
+ * and renders them as inline SVG charts.
+ * Returns a cleanup function that disconnects the observer and restores any replaced blocks.
+ */
+export function observeInlineCharts(): () => void {
+  const cleanups: (() => void)[] = [];
+
+  const observer = new MutationObserver((mutations) => {
+    const hasNewPre = mutations.some((m) =>
+      Array.from(m.addedNodes).some(
+        (node) =>
+          node instanceof Element &&
+          (node.matches('pre[lang="hillchart"]') ||
+            node.querySelector('pre[lang="hillchart"]') !== null),
+      ),
+    );
+    if (!hasNewPre) return;
+    cleanups.push(renderInlineCharts());
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  return () => {
+    observer.disconnect();
+    for (const cleanup of cleanups) cleanup();
+  };
+}
+
+/**
  * Finds rendered hillchart code blocks on the page and replaces them with SVG charts.
  *
  * GitHub renders ```hillchart fenced blocks as:

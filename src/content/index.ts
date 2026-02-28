@@ -6,9 +6,9 @@
 
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { detectIssuePage } from "../github/detector.js";
+import { detectIssuePage, observeIssuePage } from "../github/detector.js";
 import { setupNavigation } from "../github/navigation.js";
-import { renderInlineCharts } from "../github/inlineRenderer.js";
+import { renderInlineCharts, observeInlineCharts } from "../github/inlineRenderer.js";
 import { HillChartWidget } from "../components/HillChartWidget.js";
 import styles from "./styles.css?inline";
 
@@ -47,17 +47,36 @@ function mount(): () => void {
   shadow.appendChild(container);
 
   const root = createRoot(container);
-  root.render(
-    React.createElement(HillChartWidget, {
-      issueBodyText: page.issueBodyText,
-      commentTextarea: page.commentTextarea,
-      toolbarAnchor: page.toolbarAnchor,
-    }),
-  );
+
+  function renderWidget(
+    toolbarAnchor: Element | null,
+    issueBodyText: string,
+    commentTextarea: HTMLTextAreaElement | null,
+  ): void {
+    root.render(
+      React.createElement(HillChartWidget, {
+        issueBodyText,
+        commentTextarea,
+        toolbarAnchor,
+      }),
+    );
+  }
+
+  renderWidget(page.toolbarAnchor, page.issueBodyText, page.commentTextarea);
 
   const cleanupInline = renderInlineCharts();
+  const cleanupObserver = observeInlineCharts();
+
+  // When navigating via Turbo/Pjax, `turbo:load` fires before GitHub's React
+  // has painted the issue page. If the toolbar anchor wasn't in the DOM yet,
+  // watch for it and re-render once the page content is ready.
+  const cleanupRetry = !page.toolbarAnchor
+    ? observeIssuePage((ready) => renderWidget(ready.toolbarAnchor, ready.issueBodyText, ready.commentTextarea))
+    : null;
 
   return () => {
+    cleanupRetry?.();
+    cleanupObserver();
     cleanupInline();
     root.unmount();
     host.remove();

@@ -56,6 +56,20 @@ describe('setupNavigation', () => {
     teardown()
   })
 
+  // In production, pushstate-patch.js (MAIN world) dispatches hill:urlchange
+  // when the page calls history.pushState/replaceState. In unit tests we
+  // dispatch the event directly to simulate that cross-world communication.
+  it('calls cleanup then re-mounts on hill:urlchange (pushState)', () => {
+    const { mount, cleanup } = makeMount()
+    const teardown = setupNavigation(mount)
+
+    window.dispatchEvent(new Event('hill:urlchange'))
+
+    expect(cleanup).toHaveBeenCalledOnce()
+    expect(mount).toHaveBeenCalledTimes(2)
+    teardown()
+  })
+
   it('re-uses the latest cleanup on each navigation', () => {
     const cleanup1 = vi.fn()
     const cleanup2 = vi.fn()
@@ -87,6 +101,7 @@ describe('setupNavigation', () => {
     document.dispatchEvent(new Event('turbo:load'))
     document.dispatchEvent(new Event('pjax:end'))
     window.dispatchEvent(new PopStateEvent('popstate'))
+    window.dispatchEvent(new Event('hill:urlchange'))
 
     // No new mount calls after teardown
     expect(mount.mock.calls.length).toBe(countBefore)

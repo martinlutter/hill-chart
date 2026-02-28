@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { buildInlineChartSvg, renderInlineCharts } from '../../src/github/inlineRenderer.js'
+import { buildInlineChartSvg, renderInlineCharts, observeInlineCharts } from '../../src/github/inlineRenderer.js'
 import type { HillPoint } from '../../src/types/index.js'
 
 const SAMPLE_POINTS: HillPoint[] = [
@@ -220,5 +220,94 @@ describe('renderInlineCharts', () => {
     expect(svg).not.toBeNull()
     expect(svg!.querySelectorAll('circle')).toHaveLength(2)
     cleanup()
+  })
+})
+
+describe('observeInlineCharts', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('renders a chart when a pre[lang="hillchart"] is dynamically added', async () => {
+    const cleanup = observeInlineCharts()
+
+    const div = document.createElement('div')
+    div.innerHTML = PRE_BLOCK
+    document.body.appendChild(div)
+    await Promise.resolve()
+
+    expect(document.querySelector('[data-testid="hillchart-inline"]')).not.toBeNull()
+    cleanup()
+  })
+
+  it('does not trigger for unrelated DOM mutations', async () => {
+    const cleanup = observeInlineCharts()
+
+    document.body.appendChild(document.createElement('p'))
+    await Promise.resolve()
+
+    expect(document.querySelector('[data-testid="hillchart-inline"]')).toBeNull()
+    cleanup()
+  })
+
+  it('does not double-render a pre that was already processed by renderInlineCharts', async () => {
+    document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+    const cleanupRender = renderInlineCharts()
+    expect(document.querySelectorAll('[data-testid="hillchart-inline"]')).toHaveLength(1)
+
+    const cleanup = observeInlineCharts()
+    // Trigger observer with an unrelated addition
+    document.body.appendChild(document.createElement('span'))
+    await Promise.resolve()
+
+    expect(document.querySelectorAll('[data-testid="hillchart-inline"]')).toHaveLength(1)
+    cleanupRender()
+    cleanup()
+  })
+
+  it('renders charts across multiple separate dynamic additions', async () => {
+    const cleanup = observeInlineCharts()
+
+    const div1 = document.createElement('div')
+    div1.innerHTML = PRE_BLOCK
+    document.body.appendChild(div1)
+    await Promise.resolve()
+
+    const div2 = document.createElement('div')
+    div2.innerHTML = `<pre lang="hillchart"><code>{"version":"1","points":[{"id":"x","description":"X","x":50,"y":50,"color":"#f00"}]}</code></pre>`
+    document.body.appendChild(div2)
+    await Promise.resolve()
+
+    expect(document.querySelectorAll('[data-testid="hillchart-inline"]')).toHaveLength(2)
+    cleanup()
+  })
+
+  it('cleanup disconnects the observer so no further charts are rendered', async () => {
+    const cleanup = observeInlineCharts()
+    cleanup()
+
+    const div = document.createElement('div')
+    div.innerHTML = PRE_BLOCK
+    document.body.appendChild(div)
+    await Promise.resolve()
+
+    expect(document.querySelector('[data-testid="hillchart-inline"]')).toBeNull()
+  })
+
+  it('cleanup removes charts rendered by the observer', async () => {
+    const cleanup = observeInlineCharts()
+
+    const div = document.createElement('div')
+    div.innerHTML = PRE_BLOCK
+    document.body.appendChild(div)
+    await Promise.resolve()
+
+    expect(document.querySelector('[data-testid="hillchart-inline"]')).not.toBeNull()
+    cleanup()
+    expect(document.querySelector('[data-testid="hillchart-inline"]')).toBeNull()
   })
 })

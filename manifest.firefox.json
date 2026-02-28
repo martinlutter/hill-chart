@@ -11,7 +11,7 @@
   "permissions": ["activeTab"],
   "content_scripts": [
     {
-      "matches": ["https://github.com/*/issues/*"],
+      "matches": ["https://github.com/*"],
       "js": ["content/index.js"],
       "run_at": "document_idle"
     }

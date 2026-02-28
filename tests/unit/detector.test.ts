@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { detectIssuePage } from '../../src/github/detector.js'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { detectIssuePage, observeIssuePage } from '../../src/github/detector.js'
 
 const ISSUE_URL = 'https://github.com/martinlutter/skills-expand-your-team-with-copilot/issues/9'
 
@@ -109,5 +109,88 @@ describe('detectIssuePage — non-issue page returns all nulls', () => {
     expect(result.commentTextarea).toBeNull()
     expect(result.toolbarAnchor).toBeNull()
     expect(result.issueBodyText).toBe('')
+  })
+})
+
+describe('observeIssuePage', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    // observeIssuePage calls detectIssuePage() without args, so we need the
+    // location to look like an issue page
+    vi.stubGlobal('location', { href: ISSUE_URL })
+  })
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+    vi.unstubAllGlobals()
+  })
+
+  it('calls onReady when the toolbar anchor is added to the DOM', async () => {
+    const onReady = vi.fn()
+    const cleanup = observeIssuePage(onReady)
+
+    document.body.innerHTML = `<div data-component="PH_Actions"></div>`
+    await Promise.resolve()
+
+    expect(onReady).toHaveBeenCalledOnce()
+    cleanup()
+  })
+
+  it('passes full PageElements to onReady', async () => {
+    const onReady = vi.fn()
+    observeIssuePage(onReady)
+
+    document.body.innerHTML = `
+      <div data-component="PH_Actions"></div>
+      <div data-testid="issue-body-viewer"><p>hello</p></div>
+      <div class="CommentBox-root">
+        <fieldset class="MarkdownEditor-root">
+          <textarea></textarea>
+        </fieldset>
+      </div>
+    `
+    await Promise.resolve()
+
+    const page = onReady.mock.calls[0][0]
+    expect(page.isIssuePage).toBe(true)
+    expect(page.toolbarAnchor).not.toBeNull()
+    expect(page.issueBodyText).toContain('hello')
+    expect(page.commentTextarea).not.toBeNull()
+  })
+
+  it('does not call onReady for mutations that do not include the toolbar', async () => {
+    const onReady = vi.fn()
+    const cleanup = observeIssuePage(onReady)
+
+    document.body.appendChild(document.createElement('p'))
+    await Promise.resolve()
+
+    expect(onReady).not.toHaveBeenCalled()
+    cleanup()
+  })
+
+  it('is one-shot — disconnects after the first match', async () => {
+    const onReady = vi.fn()
+    observeIssuePage(onReady)
+
+    document.body.innerHTML = `<div data-component="PH_Actions"></div>`
+    await Promise.resolve()
+    expect(onReady).toHaveBeenCalledOnce()
+
+    // Further mutations should not re-trigger
+    document.body.appendChild(document.createElement('div'))
+    await Promise.resolve()
+    expect(onReady).toHaveBeenCalledOnce()
+  })
+
+  it('cleanup prevents onReady from being called', async () => {
+    const onReady = vi.fn()
+    const cleanup = observeIssuePage(onReady)
+    cleanup()
+
+    document.body.innerHTML = `<div data-component="PH_Actions"></div>`
+    await Promise.resolve()
+
+    expect(onReady).not.toHaveBeenCalled()
   })
 })

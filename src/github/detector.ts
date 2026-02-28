@@ -43,6 +43,22 @@ export function detectIssuePage(url = window.location.href): PageElements {
   };
 }
 
+/**
+ * Watches for the issue page DOM to become ready (GitHub React may paint after
+ * the navigation event fires). Calls `onReady` once with the resolved elements
+ * and disconnects. Returns a cleanup function.
+ */
+export function observeIssuePage(onReady: (page: PageElements) => void): () => void {
+  const observer = new MutationObserver(() => {
+    const page = detectIssuePage();
+    if (!page.toolbarAnchor) return;
+    observer.disconnect();
+    onReady(page);
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  return () => observer.disconnect();
+}
+
 /** Returns all elements on the page that could contain hillchart data. */
 export function findCommentBodies(): Element[] {
   return Array.from(

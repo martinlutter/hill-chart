@@ -13,6 +13,8 @@
 
 import { test, expect } from './extension.setup'
 import type { Page } from '@playwright/test'
+import fs from 'fs'
+import path from 'path'
 
 /** Scopes a locator chain inside the extension shadow root. */
 function inShadow(page: Page) {
@@ -106,6 +108,75 @@ test.describe('Turbo navigation re-mount', () => {
 
     await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible()
     await expect(page.locator('#hillchart-extension-root')).toHaveCount(1)
+  })
+})
+
+test.describe('SPA navigation (pushState)', () => {
+  const FIXTURES = path.resolve(import.meta.dirname, 'fixtures')
+
+  test('Hill Chart button appears after navigating from the issues list to a ticket', async ({
+    context,
+  }) => {
+    const listUrl = 'https://github.com/test-org/test-repo/issues'
+    const listHtml = fs.readFileSync(path.join(FIXTURES, 'github-issues-list.html'), 'utf-8')
+    const issueHtml = fs.readFileSync(path.join(FIXTURES, 'github-issue.html'), 'utf-8')
+
+    const page = await context.newPage()
+
+    await page.route(listUrl, (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: listHtml }),
+    )
+
+    await page.goto(listUrl, { waitUntil: 'domcontentloaded' })
+
+    // Wait for the extension's pushstate-patch.js to load and patch history
+    await page.waitForFunction(() => (window as any).__hillPushstatePatched, null, {
+      timeout: 5000,
+    })
+
+    // Extension is loaded (matches https://github.com/*) but mount() returns
+    // early because this is not an issue page. Simulate GitHub's SPA navigation:
+    // pushState changes the URL, then the page DOM is replaced (like React render).
+    await page.evaluate((html) => {
+      history.pushState({}, '', '/test-org/test-repo/issues/1')
+      const doc = new DOMParser().parseFromString(html, 'text/html')
+      document.body.innerHTML = doc.body.innerHTML
+    }, issueHtml)
+
+    // The extension should detect the URL change via our patched pushState,
+    // re-run mount(), and observeIssuePage waits for the toolbar anchor.
+    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible({
+      timeout: 5000,
+    })
+  })
+
+  test('inline charts render after SPA navigation to a ticket', async ({ context }) => {
+    const listUrl = 'https://github.com/test-org/test-repo/issues'
+    const listHtml = fs.readFileSync(path.join(FIXTURES, 'github-issues-list.html'), 'utf-8')
+    const issueHtml = fs.readFileSync(path.join(FIXTURES, 'github-issue.html'), 'utf-8')
+
+    const page = await context.newPage()
+
+    await page.route(listUrl, (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: listHtml }),
+    )
+
+    await page.goto(listUrl, { waitUntil: 'domcontentloaded' })
+
+    // Wait for the extension's pushstate-patch.js to load and patch history
+    await page.waitForFunction(() => (window as any).__hillPushstatePatched, null, {
+      timeout: 5000,
+    })
+
+    await page.evaluate((html) => {
+      history.pushState({}, '', '/test-org/test-repo/issues/1')
+      const doc = new DOMParser().parseFromString(html, 'text/html')
+      document.body.innerHTML = doc.body.innerHTML
+    }, issueHtml)
+
+    await expect(
+      page.locator('[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]'),
+    ).toBeVisible({ timeout: 5000 })
   })
 })
 
