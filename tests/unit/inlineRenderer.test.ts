@@ -337,7 +337,7 @@ describe('observeInlineCharts', () => {
     await Promise.resolve()
 
     const div2 = document.createElement('div')
-    div2.innerHTML = `<pre lang="hillchart"><code>{"version":"1","points":[{"id":"x","description":"X","x":50,"y":50,"color":"#f00"}]}</code></pre>`
+    div2.innerHTML = '<pre lang="hillchart"><code>{"version":"1","points":[{"id":"x","description":"X","x":50,"y":50,"color":"#f00"}]}</code></pre>'
     document.body.appendChild(div2)
     await Promise.resolve()
 

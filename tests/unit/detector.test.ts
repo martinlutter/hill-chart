@@ -129,7 +129,7 @@ describe('observeIssuePage', () => {
     const onReady = vi.fn()
     const cleanup = observeIssuePage(onReady)
 
-    document.body.innerHTML = `<div data-component="PH_Actions"></div>`
+    document.body.innerHTML = '<div data-component="PH_Actions"></div>'
     await Promise.resolve()
 
     expect(onReady).toHaveBeenCalledOnce()
@@ -173,7 +173,7 @@ describe('observeIssuePage', () => {
     const onReady = vi.fn()
     observeIssuePage(onReady)
 
-    document.body.innerHTML = `<div data-component="PH_Actions"></div>`
+    document.body.innerHTML = '<div data-component="PH_Actions"></div>'
     await Promise.resolve()
     expect(onReady).toHaveBeenCalledOnce()
 
@@ -188,7 +188,7 @@ describe('observeIssuePage', () => {
     const cleanup = observeIssuePage(onReady)
     cleanup()
 
-    document.body.innerHTML = `<div data-component="PH_Actions"></div>`
+    document.body.innerHTML = '<div data-component="PH_Actions"></div>'
     await Promise.resolve()
 
     expect(onReady).not.toHaveBeenCalled()

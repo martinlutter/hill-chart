@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Hill Chart E2E test suite.
  *
@@ -44,20 +45,28 @@ test.describe('Button injection', () => {
     })
   })
 
-  test('button is inside [data-component="PH_Actions"]', async ({ loadFixture }) => {
+  test('button is inside [data-component="PH_Actions"]', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
 
     // The button is portalled directly into the GitHub header toolbar
     await expect(
-      page.locator('[data-component="PH_Actions"] [data-testid="hillchart-button"]'),
+      page.locator(
+        '[data-component="PH_Actions"] [data-testid="hillchart-button"]',
+      ),
     ).toBeVisible({ timeout: 5000 })
   })
 })
 
 test.describe('Shadow DOM', () => {
-  test('shadow host has a scoped <style> element injected', async ({ loadFixture }) => {
+  test('shadow host has a scoped <style> element injected', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
-    await page.locator('#hillchart-extension-root').waitFor({ state: 'attached', timeout: 5000 })
+    await page
+      .locator('#hillchart-extension-root')
+      .waitFor({ state: 'attached', timeout: 5000 })
 
     const hasStyle = await page.evaluate(() => {
       const host = document.getElementById('hillchart-extension-root')
@@ -66,9 +75,13 @@ test.describe('Shadow DOM', () => {
     expect(hasStyle).toBe(true)
   })
 
-  test('shadow root is in open mode (accessible via JS)', async ({ loadFixture }) => {
+  test('shadow root is in open mode (accessible via JS)', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
-    await page.locator('#hillchart-extension-root').waitFor({ state: 'attached', timeout: 5000 })
+    await page
+      .locator('#hillchart-extension-root')
+      .waitFor({ state: 'attached', timeout: 5000 })
 
     const shadowMode = await page.evaluate(() => {
       const host = document.getElementById('hillchart-extension-root')
@@ -79,9 +92,13 @@ test.describe('Shadow DOM', () => {
 })
 
 test.describe('Turbo navigation re-mount', () => {
-  test('only one shadow host exists after turbo:load event', async ({ loadFixture }) => {
+  test('only one shadow host exists after turbo:load event', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
-    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible({
+      timeout: 5000,
+    })
 
     await page.evaluate(() => document.dispatchEvent(new Event('turbo:load')))
     await page.waitForTimeout(300)
@@ -89,24 +106,36 @@ test.describe('Turbo navigation re-mount', () => {
     await expect(page.locator('#hillchart-extension-root')).toHaveCount(1)
   })
 
-  test('only one Hill Chart button exists after turbo:load event', async ({ loadFixture }) => {
+  test('only one Hill Chart button exists after turbo:load event', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
-    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible({
+      timeout: 5000,
+    })
 
     await page.evaluate(() => document.dispatchEvent(new Event('turbo:load')))
     await page.waitForTimeout(300)
 
-    await expect(page.locator('[data-testid="hillchart-button"]')).toHaveCount(1)
+    await expect(page.locator('[data-testid="hillchart-button"]')).toHaveCount(
+      1,
+    )
   })
 
-  test('button is still visible after pjax:end event', async ({ loadFixture }) => {
+  test('button is still visible after pjax:end event', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
-    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible({
+      timeout: 5000,
+    })
 
     await page.evaluate(() => document.dispatchEvent(new Event('pjax:end')))
     await page.waitForTimeout(300)
 
-    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible()
+    await expect(
+      page.locator('[data-testid="hillchart-button"]'),
+    ).toBeVisible()
     await expect(page.locator('#hillchart-extension-root')).toHaveCount(1)
   })
 })
@@ -118,8 +147,14 @@ test.describe('SPA navigation (pushState)', () => {
     context,
   }) => {
     const listUrl = 'https://github.com/test-org/test-repo/issues'
-    const listHtml = fs.readFileSync(path.join(FIXTURES, 'github-issues-list.html'), 'utf-8')
-    const issueHtml = fs.readFileSync(path.join(FIXTURES, 'github-issue.html'), 'utf-8')
+    const listHtml = fs.readFileSync(
+      path.join(FIXTURES, 'github-issues-list.html'),
+      'utf-8',
+    )
+    const issueHtml = fs.readFileSync(
+      path.join(FIXTURES, 'github-issue.html'),
+      'utf-8',
+    )
 
     const page = await context.newPage()
 
@@ -130,9 +165,13 @@ test.describe('SPA navigation (pushState)', () => {
     await page.goto(listUrl, { waitUntil: 'domcontentloaded' })
 
     // Wait for the extension's pushstate-patch.js to load and patch history
-    await page.waitForFunction(() => (window as any).__hillPushstatePatched, null, {
-      timeout: 5000,
-    })
+    await page.waitForFunction(
+      () => (window as any).__hillPushstatePatched,
+      null,
+      {
+        timeout: 5000,
+      },
+    )
 
     // Extension is loaded (matches https://github.com/*) but mount() returns
     // early because this is not an issue page. Simulate GitHub's SPA navigation:
@@ -150,10 +189,18 @@ test.describe('SPA navigation (pushState)', () => {
     })
   })
 
-  test('inline charts render after SPA navigation to a ticket', async ({ context }) => {
+  test('inline charts render after SPA navigation to a ticket', async ({
+    context,
+  }) => {
     const listUrl = 'https://github.com/test-org/test-repo/issues'
-    const listHtml = fs.readFileSync(path.join(FIXTURES, 'github-issues-list.html'), 'utf-8')
-    const issueHtml = fs.readFileSync(path.join(FIXTURES, 'github-issue.html'), 'utf-8')
+    const listHtml = fs.readFileSync(
+      path.join(FIXTURES, 'github-issues-list.html'),
+      'utf-8',
+    )
+    const issueHtml = fs.readFileSync(
+      path.join(FIXTURES, 'github-issue.html'),
+      'utf-8',
+    )
 
     const page = await context.newPage()
 
@@ -164,9 +211,13 @@ test.describe('SPA navigation (pushState)', () => {
     await page.goto(listUrl, { waitUntil: 'domcontentloaded' })
 
     // Wait for the extension's pushstate-patch.js to load and patch history
-    await page.waitForFunction(() => (window as any).__hillPushstatePatched, null, {
-      timeout: 5000,
-    })
+    await page.waitForFunction(
+      () => (window as any).__hillPushstatePatched,
+      null,
+      {
+        timeout: 5000,
+      },
+    )
 
     await page.evaluate((html) => {
       history.pushState({}, '', '/test-org/test-repo/issues/1')
@@ -175,7 +226,9 @@ test.describe('SPA navigation (pushState)', () => {
     }, issueHtml)
 
     await expect(
-      page.locator('[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]'),
+      page.locator(
+        '[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]',
+      ),
     ).toBeVisible({ timeout: 5000 })
   })
 })
@@ -186,20 +239,28 @@ test.describe('Panel — open and close', () => {
   test('clicking Hill Chart button opens a panel', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    await expect(inShadow(page).locator('[data-testid="hillchart-panel"]')).toBeVisible()
+    await expect(
+      inShadow(page).locator('[data-testid="hillchart-panel"]'),
+    ).toBeVisible()
   })
 
-  test('panel has a close button that dismisses it', async ({ loadFixture }) => {
+  test('panel has a close button that dismisses it', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
     const shadow = inShadow(page)
     await page.locator('[data-testid="hillchart-button"]').click()
     await shadow.locator('[data-testid="hillchart-panel-close"]').click()
-    await expect(shadow.locator('[data-testid="hillchart-panel"]')).not.toBeVisible()
+    await expect(
+      shadow.locator('[data-testid="hillchart-panel"]'),
+    ).not.toBeVisible()
   })
 })
 
 test.describe('Viewer — existing chart data', () => {
-  test('panel shows SVG circles matching existing chart data', async ({ loadFixture }) => {
+  test('panel shows SVG circles matching existing chart data', async ({
+    loadFixture,
+  }) => {
     // Fixture has 3 points: Login flow, JWT handling, Password reset
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
@@ -211,32 +272,46 @@ test.describe('Viewer — existing chart data', () => {
   test('viewer shows an Edit Hill Chart button', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    await expect(inShadow(page).locator('button:has-text("Edit Hill Chart")')).toBeVisible()
+    await expect(
+      inShadow(page).locator('button:has-text("Edit Hill Chart")'),
+    ).toBeVisible()
   })
 })
 
 test.describe('Editor — empty issue', () => {
-  test('panel opens in edit mode when no chart data exists', async ({ loadFixture }) => {
+  test('panel opens in edit mode when no chart data exists', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue-empty.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    await expect(inShadow(page).locator('[data-testid="add-point-form"]')).toBeVisible()
+    await expect(
+      inShadow(page).locator('[data-testid="add-point-form"]'),
+    ).toBeVisible()
   })
 
-  test('adding a point creates a circle on the SVG', async ({ loadFixture }) => {
+  test('adding a point creates a circle on the SVG', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue-empty.html')
     await page.locator('[data-testid="hillchart-button"]').click()
     const shadow = inShadow(page)
-    await shadow.locator('[data-testid="point-description-input"]').fill('Authentication')
+    await shadow
+      .locator('[data-testid="point-description-input"]')
+      .fill('Authentication')
     await shadow.locator('[data-testid="add-point-submit"]').click()
     // Editor renders one transparent hit circle + one colored circle per point
-    await expect(shadow.locator('circle:not([fill="transparent"])')).toHaveCount(1)
+    await expect(
+      shadow.locator('circle:not([fill="transparent"])'),
+    ).toHaveCount(1)
     // SVG <text> label is visible
     await expect(shadow.locator('text=Authentication')).toBeVisible()
   })
 })
 
 test.describe('Drag interaction', () => {
-  test('dragging a point changes its x position on the hill', async ({ loadFixture }) => {
+  test('dragging a point changes its x position on the hill', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
     const shadow = inShadow(page)
@@ -247,8 +322,12 @@ test.describe('Drag interaction', () => {
     // Get initial screen position and SVG cx of the "JWT handling" point (x=30)
     const initialState = await page.evaluate(() => {
       const host = document.getElementById('hillchart-extension-root')
-      const group = host?.shadowRoot?.querySelector<SVGGElement>('[data-point-id="bbbb-2222"]')
-      const hitCircle = group?.querySelector<SVGCircleElement>('circle[fill="transparent"]')
+      const group = host?.shadowRoot?.querySelector<SVGGElement>(
+        '[data-point-id="bbbb-2222"]',
+      )
+      const hitCircle = group?.querySelector<SVGCircleElement>(
+        'circle[fill="transparent"]',
+      )
       if (!hitCircle) return null
       const rect = hitCircle.getBoundingClientRect()
       return {
@@ -262,15 +341,23 @@ test.describe('Drag interaction', () => {
     // Drag the point to the right
     await page.mouse.move(initialState!.screenX, initialState!.screenY)
     await page.mouse.down()
-    await page.mouse.move(initialState!.screenX + 80, initialState!.screenY, { steps: 10 })
+    await page.mouse.move(initialState!.screenX + 80, initialState!.screenY, {
+      steps: 10,
+    })
     await page.mouse.up()
 
     // Assert the circle's cx increased (point moved right along the hill curve)
     const newCx = await page.evaluate(() => {
       const host = document.getElementById('hillchart-extension-root')
-      const group = host?.shadowRoot?.querySelector<SVGGElement>('[data-point-id="bbbb-2222"]')
-      const visibleCircle = group?.querySelector<SVGCircleElement>('circle:not([fill="transparent"])')
-      return visibleCircle ? parseFloat(visibleCircle.getAttribute('cx') ?? '0') : null
+      const group = host?.shadowRoot?.querySelector<SVGGElement>(
+        '[data-point-id="bbbb-2222"]',
+      )
+      const visibleCircle = group?.querySelector<SVGCircleElement>(
+        'circle:not([fill="transparent"])',
+      )
+      return visibleCircle
+        ? parseFloat(visibleCircle.getAttribute('cx') ?? '0')
+        : null
     })
     expect(newCx).not.toBeNull()
     expect(newCx).toBeGreaterThan(initialState!.cx)
@@ -285,7 +372,9 @@ test.describe('Inline chart rendering', () => {
   }) => {
     const page = await loadFixture('github-issue.html')
     await expect(
-      page.locator('[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]'),
+      page.locator(
+        '[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]',
+      ),
     ).toBeVisible({ timeout: 5000 })
   })
 
@@ -294,20 +383,28 @@ test.describe('Inline chart rendering', () => {
   }) => {
     const page = await loadFixture('github-issue.html')
     await expect(
-      page.locator('[data-testid="comment-body"] [data-testid="hillchart-inline"]'),
+      page.locator(
+        '[data-testid="comment-body"] [data-testid="hillchart-inline"]',
+      ),
     ).toBeVisible({ timeout: 5000 })
   })
 
-  test('no inline chart in comments without hillchart data', async ({ loadFixture }) => {
+  test('no inline chart in comments without hillchart data', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
     // Wait for inline charts to render
     await expect(
-      page.locator('[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]'),
+      page.locator(
+        '[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]',
+      ),
     ).toBeVisible({ timeout: 5000 })
 
     // The plain comment should NOT have an inline chart
     await expect(
-      page.locator('[data-testid="comment-body-plain"] [data-testid="hillchart-inline"]'),
+      page.locator(
+        '[data-testid="comment-body-plain"] [data-testid="hillchart-inline"]',
+      ),
     ).toHaveCount(0)
   })
 
@@ -336,14 +433,22 @@ test.describe('Inline chart rendering', () => {
   test('no inline charts on empty issue fixture', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue-empty.html')
     // Wait for extension to load
-    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible({ timeout: 5000 })
-    await expect(page.locator('[data-testid="hillchart-inline"]')).toHaveCount(0)
+    await expect(page.locator('[data-testid="hillchart-button"]')).toBeVisible({
+      timeout: 5000,
+    })
+    await expect(page.locator('[data-testid="hillchart-inline"]')).toHaveCount(
+      0,
+    )
   })
 
-  test('only one inline chart per comment after turbo:load re-mount', async ({ loadFixture }) => {
+  test('only one inline chart per comment after turbo:load re-mount', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
     await expect(
-      page.locator('[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]'),
+      page.locator(
+        '[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]',
+      ),
     ).toBeVisible({ timeout: 5000 })
 
     await page.evaluate(() => document.dispatchEvent(new Event('turbo:load')))
@@ -351,16 +456,22 @@ test.describe('Inline chart rendering', () => {
 
     // Still exactly one inline chart per comment body with data
     await expect(
-      page.locator('[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]'),
+      page.locator(
+        '[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]',
+      ),
     ).toHaveCount(1)
     await expect(
-      page.locator('[data-testid="comment-body"] [data-testid="hillchart-inline"]'),
+      page.locator(
+        '[data-testid="comment-body"] [data-testid="hillchart-inline"]',
+      ),
     ).toHaveCount(1)
   })
 })
 
 test.describe('Inline chart edit button', () => {
-  test('edit button appears on hover over inline chart', async ({ loadFixture }) => {
+  test('edit button appears on hover over inline chart', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
     const inlineChart = page.locator(
       '[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]',
@@ -368,7 +479,9 @@ test.describe('Inline chart edit button', () => {
     await expect(inlineChart).toBeVisible({ timeout: 5000 })
 
     // Edit button exists but is hidden (opacity 0)
-    const editBtn = inlineChart.locator('[data-testid="hillchart-inline-edit"]')
+    const editBtn = inlineChart.locator(
+      '[data-testid="hillchart-inline-edit"]',
+    )
     await expect(editBtn).toBeAttached()
 
     // Hover over the chart wrapper to reveal the edit button
@@ -391,15 +504,23 @@ test.describe('Inline chart edit button', () => {
 
     const shadow = inShadow(page)
     // Panel should be open in editing mode (save/cancel buttons visible)
-    await expect(shadow.locator('[data-testid="hillchart-save"]')).toBeVisible()
-    await expect(shadow.locator('[data-testid="hillchart-cancel"]')).toBeVisible()
+    await expect(
+      shadow.locator('[data-testid="hillchart-save"]'),
+    ).toBeVisible()
+    await expect(
+      shadow.locator('[data-testid="hillchart-cancel"]'),
+    ).toBeVisible()
 
     // Editor should have the 3 points from the issue body chart pre-loaded
     // Editor renders one transparent hit circle + one colored circle per point
-    await expect(shadow.locator('circle:not([fill="transparent"])')).toHaveCount(3)
+    await expect(
+      shadow.locator('circle:not([fill="transparent"])'),
+    ).toHaveCount(3)
   })
 
-  test('edit button appears on timeline comment inline chart too', async ({ loadFixture }) => {
+  test('edit button appears on timeline comment inline chart too', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
     const commentChart = page.locator(
       '[data-testid="comment-body"] [data-testid="hillchart-inline"]',
@@ -407,23 +528,31 @@ test.describe('Inline chart edit button', () => {
     await expect(commentChart).toBeVisible({ timeout: 5000 })
 
     await commentChart.hover()
-    const editBtn = commentChart.locator('[data-testid="hillchart-inline-edit"]')
+    const editBtn = commentChart.locator(
+      '[data-testid="hillchart-inline-edit"]',
+    )
     await expect(editBtn).toHaveCSS('opacity', '1')
   })
 })
 
 test.describe('Save and cancel', () => {
-  test('clicking Save writes encoded data to the comment textarea', async ({ loadFixture }) => {
+  test('clicking Save writes encoded data to the comment textarea', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue-empty.html')
     await page.locator('[data-testid="hillchart-button"]').click()
     const shadow = inShadow(page)
 
-    await shadow.locator('[data-testid="point-description-input"]').fill('Auth')
+    await shadow
+      .locator('[data-testid="point-description-input"]')
+      .fill('Auth')
     await shadow.locator('[data-testid="add-point-submit"]').click()
     await shadow.locator('[data-testid="hillchart-save"]').click()
 
     // Save closes the panel and appends encoded data to the textarea
-    await expect(shadow.locator('[data-testid="hillchart-panel"]')).not.toBeVisible({
+    await expect(
+      shadow.locator('[data-testid="hillchart-panel"]'),
+    ).not.toBeVisible({
       timeout: 5000,
     })
 
@@ -431,17 +560,49 @@ test.describe('Save and cancel', () => {
     expect(textareaValue).toContain('```hillchart')
   })
 
-  test('clicking Cancel discards changes and returns to viewer', async ({ loadFixture }) => {
+  test('clicking Copy to clipboard writes encoded data to the clipboard', async ({
+    loadFixture,
+  }) => {
+    const page = await loadFixture('github-issue-empty.html')
+
+    // Grant clipboard permissions so both the extension and our readText() call work
+    await page
+      .context()
+      .grantPermissions(['clipboard-read', 'clipboard-write'])
+
+    await page.locator('[data-testid="hillchart-button"]').click()
+    const shadow = inShadow(page)
+
+    await shadow
+      .locator('[data-testid="point-description-input"]')
+      .fill('Auth')
+    await shadow.locator('[data-testid="add-point-submit"]').click()
+    await shadow.locator('[data-testid="hillchart-copy"]').click()
+
+    // Read the system clipboard — content script writes to it, main world reads it
+    const clipboardText = await page.evaluate(() =>
+      navigator.clipboard.readText(),
+    )
+    expect(clipboardText).toContain('```hillchart')
+  })
+
+  test('clicking Cancel discards changes and returns to viewer', async ({
+    loadFixture,
+  }) => {
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
     const shadow = inShadow(page)
 
     await shadow.locator('button:has-text("Edit Hill Chart")').click()
-    await shadow.locator('[data-testid="point-description-input"]').fill('New point')
+    await shadow
+      .locator('[data-testid="point-description-input"]')
+      .fill('New point')
     await shadow.locator('[data-testid="add-point-submit"]').click()
     await shadow.locator('[data-testid="hillchart-cancel"]').click()
 
     // Should revert to viewer with original 3 saved points (no transparent circles in viewer)
-    await expect(shadow.locator('circle:not([fill="transparent"])')).toHaveCount(3)
+    await expect(
+      shadow.locator('circle:not([fill="transparent"])'),
+    ).toHaveCount(3)
   })
 })

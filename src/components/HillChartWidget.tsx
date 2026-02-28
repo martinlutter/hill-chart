@@ -9,7 +9,7 @@ import { HillChartEditor } from './HillChartEditor.js'
 import { PointList } from './PointList.js'
 import { AddPointForm } from './AddPointForm.js'
 
-type PanelState = 'hidden' | 'viewing' | 'editing' | 'saving' | 'error'
+type PanelState = 'hidden' | 'viewing' | 'editing' | 'saving' | 'error';
 
 export interface HillChartWidgetProps {
   /** Raw innerHTML of the first issue body — contains the hillchart HTML comment block */
@@ -111,12 +111,20 @@ export function HillChartWidget({
     }
   }, [commentTextarea, draftPoints])
 
+  const handleCopyToClipboard = useCallback(async () => {
+    const encoded = encode({ version: '1', points: draftPoints })
+    await navigator.clipboard.writeText(encoded)
+    setPanelState('hidden')
+  }, [draftPoints])
+
   const handleAddPoint = useCallback((point: HillPoint) => {
     setDraftPoints((prev) => [...prev, point])
   }, [])
 
   const handleUpdatePoint = useCallback((updated: HillPoint) => {
-    setDraftPoints((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+    setDraftPoints((prev) =>
+      prev.map((p) => (p.id === updated.id ? updated : p)),
+    )
   }, [])
 
   const handleDeletePoint = useCallback((id: string) => {
@@ -157,16 +165,33 @@ export function HillChartWidget({
   if (panelState === 'editing') {
     panelFooter = (
       <>
-        <button type="button" className="btn btn-secondary" onClick={handleCancel} data-testid="hillchart-cancel">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={handleCancel}
+          data-testid="hillchart-cancel"
+        >
           Cancel
         </button>
         <button
           type="button"
+          className="btn btn-secondary"
+          onClick={() => {
+            void handleCopyToClipboard()
+          }}
+          data-testid="hillchart-copy"
+        >
+          Copy to clipboard
+        </button>
+        <button
+          type="button"
           className="btn btn-primary"
-          onClick={() => { void handleSave() }}
+          onClick={() => {
+            void handleSave()
+          }}
           data-testid="hillchart-save"
         >
-          Save
+          Paste to comment
         </button>
       </>
     )
@@ -197,7 +222,8 @@ export function HillChartWidget({
     )
   }
 
-  const panelTitle = panelState === 'viewing' ? 'Hill Chart' : 'Edit Hill Chart'
+  const panelTitle =
+    panelState === 'viewing' ? 'Hill Chart' : 'Edit Hill Chart'
 
   return (
     <>
@@ -214,7 +240,12 @@ export function HillChartWidget({
           toolbarAnchor,
         )}
 
-      <dialog ref={dialogRef} className="hillchart-panel" aria-label={panelTitle} data-testid="hillchart-panel">
+      <dialog
+        ref={dialogRef}
+        className="hillchart-panel"
+        aria-label={panelTitle}
+        data-testid="hillchart-panel"
+      >
         <div className="hillchart-panel-header">
           <span className="hillchart-panel-title">{panelTitle}</span>
           <button
