@@ -30,12 +30,12 @@ function svgEl<K extends keyof SVGElementTagNameMap>(
 export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
   const svg = svgEl("svg", {
     viewBox: `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`,
-    width: "100%",
     "aria-label": "Hill chart",
     role: "img",
   });
   svg.style.display = "block";
-  svg.style.maxWidth = "600px";
+  svg.style.width = "600px";
+  svg.style.maxWidth = "100%";
 
   // Hill curve
   const path = svgEl("path", {
@@ -222,6 +222,7 @@ export function renderInlineCharts(): () => void {
     const wrapper = document.createElement("div");
     wrapper.setAttribute(INLINE_MARKER, "");
     wrapper.setAttribute("data-testid", "hillchart-inline");
+    wrapper.style.display = "inline-block";
     wrapper.style.margin = "16px 0 8px";
     wrapper.style.padding = "12px";
     wrapper.style.background = "#161b22";
