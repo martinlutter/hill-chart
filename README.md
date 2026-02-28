@@ -2,17 +2,25 @@
 
 A browser extension that adds interactive [Basecamp-style Hill Charts](https://basecamp.com/features/hill-charts) to GitHub issues. Track where work stands — no tokens, no setup, just install and go.
 
+<p align="left">
+  <img src="docs/screenshots/editor.png" alt="Hill Chart editor — drag points along the curve to track progress" width="700">
+</p>
+
 ## How It Works
 
 1. Open any GitHub issue and click the **Hill Chart** button in the issue toolbar
 2. Add points representing tasks or workstreams
 3. Drag points along the hill to show progress
-4. Hit **Save** — the chart is stored as an HTML comment in the issue, visible to anyone with the extension
+4. Hit **Paste to comment** — the chart data is pasted into the issue's comment form and is ready to be submitted
 
-Data is saved directly through GitHub's comment form (no API token required). Chart data lives inside the issue itself as a `<!-- hillchart ... -->` comment, so it travels with the issue and doesn't depend on any external service.
+Data is saved directly through GitHub's comment form (no API token required). Chart data lives inside the issue itself as a `` ```hillchart `` code block, so it travels with the issue and doesn't depend on any external service.
 
 **Left side** = "Figuring things out" (uncertainty, research, design)
 **Right side** = "Making it happen" (execution, known work)
+
+<p align="left">
+  <img src="docs/screenshots/rendered.png" alt="Hill Chart rendered inline in a GitHub issue comment" width="700">
+</p>
 
 ## Install
 
