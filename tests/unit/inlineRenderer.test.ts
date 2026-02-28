@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { buildInlineChartSvg, renderInlineCharts, observeInlineCharts } from '../../src/github/inlineRenderer.js'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { buildInlineChartSvg, renderInlineCharts, observeInlineCharts, EDIT_INLINE_EVENT } from '../../src/github/inlineRenderer.js'
 import type { HillPoint } from '../../src/types/index.js'
 
 const SAMPLE_POINTS: HillPoint[] = [
@@ -220,6 +220,65 @@ describe('renderInlineCharts', () => {
     expect(svg).not.toBeNull()
     expect(svg!.querySelectorAll('circle')).toHaveLength(2)
     cleanup()
+  })
+
+  it('includes an edit button in each inline chart wrapper', () => {
+    document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+    const cleanup = renderInlineCharts()
+    const editBtn = document.querySelector('[data-testid="hillchart-inline-edit"]')
+    expect(editBtn).not.toBeNull()
+    expect(editBtn!.getAttribute('aria-label')).toBe('Edit hill chart')
+    cleanup()
+  })
+
+  it('edit button is hidden by default (opacity 0)', () => {
+    document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+    const cleanup = renderInlineCharts()
+    const editBtn = document.querySelector('[data-testid="hillchart-inline-edit"]') as HTMLElement
+    expect(editBtn.style.opacity).toBe('0')
+    cleanup()
+  })
+
+  it('edit button becomes visible on wrapper mouseenter', () => {
+    document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+    const cleanup = renderInlineCharts()
+    const wrapper = document.querySelector('[data-testid="hillchart-inline"]') as HTMLElement
+    const editBtn = document.querySelector('[data-testid="hillchart-inline-edit"]') as HTMLElement
+
+    wrapper.dispatchEvent(new Event('mouseenter'))
+    expect(editBtn.style.opacity).toBe('1')
+
+    wrapper.dispatchEvent(new Event('mouseleave'))
+    expect(editBtn.style.opacity).toBe('0')
+    cleanup()
+  })
+
+  it('edit button dispatches hillchart:edit-inline event with correct points on click', () => {
+    document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+    const cleanup = renderInlineCharts()
+    const editBtn = document.querySelector('[data-testid="hillchart-inline-edit"]') as HTMLElement
+
+    const handler = vi.fn()
+    window.addEventListener(EDIT_INLINE_EVENT, handler)
+
+    editBtn.click()
+
+    expect(handler).toHaveBeenCalledTimes(1)
+    const event = handler.mock.calls[0][0] as CustomEvent
+    expect(event.detail.points).toHaveLength(2)
+    expect(event.detail.points[0].description).toBe('Login flow')
+    expect(event.detail.points[1].description).toBe('JWT handling')
+
+    window.removeEventListener(EDIT_INLINE_EVENT, handler)
+    cleanup()
+  })
+
+  it('cleanup removes edit button along with wrapper', () => {
+    document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+    const cleanup = renderInlineCharts()
+    expect(document.querySelector('[data-testid="hillchart-inline-edit"]')).not.toBeNull()
+    cleanup()
+    expect(document.querySelector('[data-testid="hillchart-inline-edit"]')).toBeNull()
   })
 })
 

@@ -359,6 +359,59 @@ test.describe('Inline chart rendering', () => {
   })
 })
 
+test.describe('Inline chart edit button', () => {
+  test('edit button appears on hover over inline chart', async ({ loadFixture }) => {
+    const page = await loadFixture('github-issue.html')
+    const inlineChart = page.locator(
+      '[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]',
+    )
+    await expect(inlineChart).toBeVisible({ timeout: 5000 })
+
+    // Edit button exists but is hidden (opacity 0)
+    const editBtn = inlineChart.locator('[data-testid="hillchart-inline-edit"]')
+    await expect(editBtn).toBeAttached()
+
+    // Hover over the chart wrapper to reveal the edit button
+    await inlineChart.hover()
+    await expect(editBtn).toHaveCSS('opacity', '1')
+  })
+
+  test('clicking inline edit button opens editor with chart points pre-loaded', async ({
+    loadFixture,
+  }) => {
+    const page = await loadFixture('github-issue.html')
+    const inlineChart = page.locator(
+      '[data-testid="issue-body-viewer"] [data-testid="hillchart-inline"]',
+    )
+    await expect(inlineChart).toBeVisible({ timeout: 5000 })
+
+    // Hover and click the edit button
+    await inlineChart.hover()
+    await inlineChart.locator('[data-testid="hillchart-inline-edit"]').click()
+
+    const shadow = inShadow(page)
+    // Panel should be open in editing mode (save/cancel buttons visible)
+    await expect(shadow.locator('[data-testid="hillchart-save"]')).toBeVisible()
+    await expect(shadow.locator('[data-testid="hillchart-cancel"]')).toBeVisible()
+
+    // Editor should have the 3 points from the issue body chart pre-loaded
+    // Editor renders one transparent hit circle + one colored circle per point
+    await expect(shadow.locator('circle:not([fill="transparent"])')).toHaveCount(3)
+  })
+
+  test('edit button appears on timeline comment inline chart too', async ({ loadFixture }) => {
+    const page = await loadFixture('github-issue.html')
+    const commentChart = page.locator(
+      '[data-testid="comment-body"] [data-testid="hillchart-inline"]',
+    )
+    await expect(commentChart).toBeVisible({ timeout: 5000 })
+
+    await commentChart.hover()
+    const editBtn = commentChart.locator('[data-testid="hillchart-inline-edit"]')
+    await expect(editBtn).toHaveCSS('opacity', '1')
+  })
+})
+
 test.describe('Save and cancel', () => {
   test('clicking Save writes encoded data to the comment textarea', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue-empty.html')

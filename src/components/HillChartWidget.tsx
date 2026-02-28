@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import type { HillPoint } from '../types/index.js'
 import { decode, encode } from '../data/codec.js'
 import { writeHillChartComment } from '../github/commentWriter.js'
+import { EDIT_INLINE_EVENT } from '../github/inlineRenderer.js'
 import { HillChartViewer } from './HillChartViewer.js'
 import { HillChartEditor } from './HillChartEditor.js'
 import { PointList } from './PointList.js'
@@ -55,6 +56,19 @@ export function HillChartWidget({
     }
     dialog.addEventListener('cancel', handleCancel)
     return () => dialog.removeEventListener('cancel', handleCancel)
+  }, [])
+
+  // Listen for inline chart edit requests from light DOM
+  useEffect(() => {
+    const handleEditInline = (e: Event) => {
+      const points = (e as CustomEvent).detail?.points as HillPoint[] | undefined
+      if (points) {
+        setDraftPoints([...points])
+        setPanelState('editing')
+      }
+    }
+    window.addEventListener(EDIT_INLINE_EVENT, handleEditInline)
+    return () => window.removeEventListener(EDIT_INLINE_EVENT, handleEditInline)
   }, [])
 
   const openPanel = useCallback(() => {

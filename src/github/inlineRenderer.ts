@@ -14,6 +14,48 @@ const INLINE_MARKER = "data-hillchart-inline";
 const POINT_RADIUS = 10;
 const LABEL_OFFSET = 16;
 
+export const EDIT_INLINE_EVENT = "hillchart:edit-inline";
+
+const PENCIL_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Zm1.414 1.06a.25.25 0 0 0-.354 0L10.811 3.75l1.439 1.44 1.263-1.264a.25.25 0 0 0 0-.354l-1.086-1.086ZM11.189 6.25 9.75 4.811l-6.286 6.287a.25.25 0 0 0-.064.108l-.558 1.953 1.953-.558a.25.25 0 0 0 .108-.064l6.286-6.286Z"/></svg>`;
+
+function buildEditButton(points: HillPoint[]): HTMLButtonElement {
+  const btn = document.createElement("button");
+  btn.setAttribute("data-testid", "hillchart-inline-edit");
+  btn.setAttribute("aria-label", "Edit hill chart");
+  btn.innerHTML = PENCIL_SVG;
+  Object.assign(btn.style, {
+    position: "absolute",
+    top: "8px",
+    right: "8px",
+    width: "28px",
+    height: "28px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "#21262d",
+    border: "1px solid #30363d",
+    borderRadius: "6px",
+    color: "#8b949e",
+    cursor: "pointer",
+    opacity: "0",
+    transition: "opacity 0.15s",
+    padding: "0",
+  });
+  btn.addEventListener("mouseenter", () => {
+    btn.style.color = "#e6edf3";
+  });
+  btn.addEventListener("mouseleave", () => {
+    btn.style.color = "#8b949e";
+  });
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    window.dispatchEvent(
+      new CustomEvent(EDIT_INLINE_EVENT, { detail: { points } }),
+    );
+  });
+  return btn;
+}
+
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 function svgEl<K extends keyof SVGElementTagNameMap>(
@@ -228,9 +270,19 @@ export function renderInlineCharts(): () => void {
     wrapper.style.background = "#161b22";
     wrapper.style.border = "1px solid #30363d";
     wrapper.style.borderRadius = "6px";
+    wrapper.style.position = "relative";
 
     const svg = buildInlineChartSvg(result.data.points);
     wrapper.appendChild(svg);
+
+    const editBtn = buildEditButton(result.data.points);
+    wrapper.appendChild(editBtn);
+    wrapper.addEventListener("mouseenter", () => {
+      editBtn.style.opacity = "1";
+    });
+    wrapper.addEventListener("mouseleave", () => {
+      editBtn.style.opacity = "0";
+    });
 
     // Insert chart before the code block and hide the original
     hideTarget.parentElement!.insertBefore(wrapper, hideTarget);
