@@ -14,27 +14,6 @@
   box-sizing: inherit;
 }
 
-/* ── Toolbar trigger button (portalled into .gh-header-actions) ─────────── */
-.hillchart-trigger-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #e6edf3;
-  background-color: #21262d;
-  border: 1px solid #30363d;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.hillchart-trigger-btn:hover {
-  background-color: #30363d;
-  border-color: #8b949e;
-}
-
 /* ── Panel (rendered inside shadow DOM) ────────────────────────────────── */
 dialog.hillchart-panel {
   border: none;

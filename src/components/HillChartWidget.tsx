@@ -230,7 +230,7 @@ export function HillChartWidget({
       {toolbarAnchor &&
         createPortal(
           <button
-            className="hillchart-trigger-btn"
+            className="btn btn-sm"
             type="button"
             data-testid="hillchart-button"
             onClick={openPanel}
