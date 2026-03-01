@@ -14,10 +14,22 @@ export function PointItem({ point, onUpdate, onDelete }: PointItemProps) {
     onUpdate({ ...point, color: e.target.value })
   }
 
-  const handleLabelBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const trimmed = e.target.value.trim()
+  const commitLabel = (input: HTMLInputElement) => {
+    const trimmed = input.value.trim()
     if (trimmed !== point.description) {
       onUpdate({ ...point, description: trimmed || point.description })
+    }
+  }
+
+  const handleLabelBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    commitLabel(e.target)
+  }
+
+  const handleLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      commitLabel(e.currentTarget)
+      e.currentTarget.blur()
     }
   }
 
@@ -37,6 +49,7 @@ export function PointItem({ point, onUpdate, onDelete }: PointItemProps) {
         defaultValue={point.description}
         maxLength={40}
         onBlur={handleLabelBlur}
+        onKeyDown={handleLabelKeyDown}
         className="point-item-label"
         aria-label="Point label"
       />

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import { type SyntheticEvent, useRef, useState } from 'react'
 import type { HillPoint } from '../types/index.js'
 
 const COLOR_PALETTE = [
@@ -23,7 +23,7 @@ export function AddPointForm({ pointCount, onAdd }: AddPointFormProps) {
   const [color, setColor] = useState(defaultColor)
   const labelRef = useRef<HTMLInputElement>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const label = labelRef.current?.value.trim() ?? ''
     if (!label) return
