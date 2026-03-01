@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import type { HillPoint } from '../types/index.js'
-import { decode, encode } from '../data/codec.js'
+import { encode } from '../data/codec.js'
 import { writeHillChartComment } from '../github/commentWriter.js'
-import { EDIT_INLINE_EVENT } from '../github/inlineRenderer.js'
 import { HillChartViewer } from './HillChartViewer.js'
 import { HillChartEditor } from './HillChartEditor.js'
 import { PointList } from './PointList.js'
 import { AddPointForm } from './AddPointForm.js'
-
-type PanelState = 'hidden' | 'viewing' | 'editing' | 'saving' | 'error';
+import { useHillChartReducer } from '../hooks/useHillChartReducer.js'
+import { useDialogSync } from '../hooks/useDialogSync.js'
+import { useInlineEditListener } from '../hooks/useInlineEditListener.js'
 
 export interface HillChartWidgetProps {
   /** Raw innerHTML of the first issue body — contains the hillchart HTML comment block */
@@ -25,128 +25,67 @@ export function HillChartWidget({
   commentTextarea,
   toolbarAnchor,
 }: HillChartWidgetProps) {
-  const [savedPoints, setSavedPoints] = useState<HillPoint[]>(() => {
-    const result = decode(issueBodyText)
-    return result.ok ? result.data.points : []
-  })
-
-  const [panelState, setPanelState] = useState<PanelState>('hidden')
-  const [draftPoints, setDraftPoints] = useState<HillPoint[]>([])
-  const [errorMsg, setErrorMsg] = useState('')
+  const [state, dispatch] = useHillChartReducer(issueBodyText)
+  const { panelState, savedPoints, draftPoints, errorMsg } = state
   const dialogRef = useRef<HTMLDialogElement>(null)
 
-  // Open / close the native <dialog> in sync with panelState
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-    if (panelState !== 'hidden') {
-      if (!dialog.open) dialog.showModal()
-    } else {
-      if (dialog.open) dialog.close()
-    }
-  }, [panelState])
+  // ── Hooks ─────────────────────────────────────────────────────────────────
+  const onDialogCancel = useCallback(() => dispatch({ type: 'CLOSE' }), [dispatch])
+  useDialogSync(panelState, dialogRef, onDialogCancel)
 
-  // Intercept the native Escape key so we control state ourselves
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-    const handleCancel = (e: Event) => {
-      e.preventDefault()
-      setPanelState('hidden')
-    }
-    dialog.addEventListener('cancel', handleCancel)
-    return () => dialog.removeEventListener('cancel', handleCancel)
-  }, [])
+  const onInlineEdit = useCallback(
+    (points: HillPoint[]) => dispatch({ type: 'EDIT', points }),
+    [dispatch],
+  )
+  useInlineEditListener(onInlineEdit)
 
-  // Listen for inline chart edit requests from light DOM
-  useEffect(() => {
-    const handleEditInline = (e: Event) => {
-      const points = (e as CustomEvent).detail?.points as HillPoint[] | undefined
-      if (points) {
-        setDraftPoints([...points])
-        setPanelState('editing')
-      }
-    }
-    window.addEventListener(EDIT_INLINE_EVENT, handleEditInline)
-    return () => window.removeEventListener(EDIT_INLINE_EVENT, handleEditInline)
-  }, [])
-
-  const openPanel = useCallback(() => {
-    if (savedPoints.length > 0) {
-      setPanelState('viewing')
-    } else {
-      setDraftPoints([])
-      setPanelState('editing')
-    }
-  }, [savedPoints])
-
-  const handleEditRequest = useCallback(() => {
-    setDraftPoints([...savedPoints])
-    setPanelState('editing')
-  }, [savedPoints])
-
-  const handleCancel = useCallback(() => {
-    if (savedPoints.length > 0) {
-      setPanelState('viewing')
-    } else {
-      setPanelState('hidden')
-    }
-  }, [savedPoints])
-
+  // ── Side-effect callbacks ─────────────────────────────────────────────────
   const handleSave = useCallback(() => {
     if (!commentTextarea) {
-      setErrorMsg('GitHub comment textarea not found — cannot save.')
-      setPanelState('error')
+      dispatch({ type: 'SAVE_FAILURE', error: 'GitHub comment textarea not found — cannot save.' })
       return
     }
-    setPanelState('saving')
+    dispatch({ type: 'SAVE_START' })
     const encoded = encode({ version: '1', points: draftPoints })
     const result = writeHillChartComment(commentTextarea, encoded)
     if (result.ok) {
-      setSavedPoints(draftPoints)
-      setPanelState('hidden')
+      dispatch({ type: 'SAVE_SUCCESS', savedPoints: draftPoints })
     } else {
-      setErrorMsg(result.error ?? 'Unknown error')
-      setPanelState('error')
+      dispatch({ type: 'SAVE_FAILURE', error: result.error ?? 'Unknown error' })
     }
-  }, [commentTextarea, draftPoints])
+  }, [commentTextarea, draftPoints, dispatch])
 
   const handleCopyToClipboard = useCallback(async () => {
     const encoded = encode({ version: '1', points: draftPoints })
     await navigator.clipboard.writeText(encoded)
-    setPanelState('hidden')
-  }, [draftPoints])
+    dispatch({ type: 'CLOSE' })
+  }, [draftPoints, dispatch])
 
-  const handleAddPoint = useCallback((point: HillPoint) => {
-    setDraftPoints((prev) => [...prev, point])
-  }, [])
-
-  const handleUpdatePoint = useCallback((updated: HillPoint) => {
-    setDraftPoints((prev) =>
-      prev.map((p) => (p.id === updated.id ? updated : p)),
-    )
-  }, [])
-
-  const handleDeletePoint = useCallback((id: string) => {
-    setDraftPoints((prev) => prev.filter((p) => p.id !== id))
-  }, [])
-
-  // ── Panel body ──────────────────────────────────────────────────────────
+  // ── Panel body ────────────────────────────────────────────────────────────
   let panelBody: React.ReactNode = null
   if (panelState === 'viewing') {
     panelBody = (
-      <HillChartViewer points={savedPoints} onEditRequest={handleEditRequest} />
+      <HillChartViewer
+        points={savedPoints}
+        onEditRequest={() => dispatch({ type: 'EDIT', points: savedPoints })}
+      />
     )
   } else if (panelState === 'editing' || panelState === 'saving') {
     panelBody = (
       <>
-        <HillChartEditor points={draftPoints} onChange={setDraftPoints} />
+        <HillChartEditor
+          points={draftPoints}
+          onChange={(points) => dispatch({ type: 'SET_DRAFT_POINTS', points })}
+        />
         <PointList
           points={draftPoints}
-          onUpdate={handleUpdatePoint}
-          onDelete={handleDeletePoint}
+          onUpdate={(updated) => dispatch({ type: 'UPDATE_POINT', updated })}
+          onDelete={(id) => dispatch({ type: 'DELETE_POINT', id })}
         />
-        <AddPointForm pointCount={draftPoints.length} onAdd={handleAddPoint} />
+        <AddPointForm
+          pointCount={draftPoints.length}
+          onAdd={(point) => dispatch({ type: 'ADD_POINT', point })}
+        />
       </>
     )
   } else if (panelState === 'error') {
@@ -160,7 +99,7 @@ export function HillChartWidget({
     )
   }
 
-  // ── Panel footer ────────────────────────────────────────────────────────
+  // ── Panel footer ──────────────────────────────────────────────────────────
   let panelFooter: React.ReactNode = null
   if (panelState === 'editing') {
     panelFooter = (
@@ -168,7 +107,7 @@ export function HillChartWidget({
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={handleCancel}
+          onClick={() => dispatch({ type: 'CANCEL' })}
           data-testid="hillchart-cancel"
         >
           Cancel
@@ -207,14 +146,14 @@ export function HillChartWidget({
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={() => setPanelState('editing')}
+          onClick={() => dispatch({ type: 'EDIT', points: draftPoints })}
         >
           Back to edit
         </button>
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={() => setPanelState('hidden')}
+          onClick={() => dispatch({ type: 'CLOSE' })}
         >
           Close
         </button>
@@ -233,7 +172,7 @@ export function HillChartWidget({
             className="btn btn-sm"
             type="button"
             data-testid="hillchart-button"
-            onClick={openPanel}
+            onClick={() => dispatch({ type: 'OPEN' })}
           >
             Hill Chart
           </button>,
@@ -251,7 +190,7 @@ export function HillChartWidget({
           <button
             type="button"
             className="hillchart-panel-close"
-            onClick={() => setPanelState('hidden')}
+            onClick={() => dispatch({ type: 'CLOSE' })}
             aria-label="Close Hill Chart panel"
             data-testid="hillchart-panel-close"
           >
