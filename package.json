@@ -11,6 +11,9 @@
   },
   "keywords": ["hill-chart", "github", "browser-extension", "chrome-extension", "firefox-extension"],
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build",
