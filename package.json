@@ -21,7 +21,8 @@
     "test:ui": "vitest --ui",
     "test:e2e": "npm run build && playwright test",
     "typecheck": "tsc -b",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "pack:source": "bash scripts/pack-source.sh"
   },
   "dependencies": {
     "react": "^19.2.0",
