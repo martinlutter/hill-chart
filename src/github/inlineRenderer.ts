@@ -16,13 +16,38 @@ const LABEL_OFFSET = 16
 
 export const EDIT_INLINE_EVENT = 'hillchart:edit-inline'
 
-const PENCIL_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Zm1.414 1.06a.25.25 0 0 0-.354 0L10.811 3.75l1.439 1.44 1.263-1.264a.25.25 0 0 0 0-.354l-1.086-1.086ZM11.189 6.25 9.75 4.811l-6.286 6.287a.25.25 0 0 0-.064.108l-.558 1.953 1.953-.558a.25.25 0 0 0 .108-.064l6.286-6.286Z"/></svg>'
+const SVG_NS = 'http://www.w3.org/2000/svg'
+
+function svgEl<K extends keyof SVGElementTagNameMap>(
+  tag: K,
+  attrs: Record<string, string> = {},
+): SVGElementTagNameMap[K] {
+  const el = document.createElementNS(SVG_NS, tag)
+  for (const [k, v] of Object.entries(attrs)) {
+    el.setAttribute(k, v)
+  }
+  return el
+}
+
+function buildPencilIcon(): SVGSVGElement {
+  const svg = svgEl('svg', {
+    width: '14',
+    height: '14',
+    viewBox: '0 0 16 16',
+    fill: 'currentColor',
+  })
+  const path = svgEl('path', {
+    d: 'M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Zm1.414 1.06a.25.25 0 0 0-.354 0L10.811 3.75l1.439 1.44 1.263-1.264a.25.25 0 0 0 0-.354l-1.086-1.086ZM11.189 6.25 9.75 4.811l-6.286 6.287a.25.25 0 0 0-.064.108l-.558 1.953 1.953-.558a.25.25 0 0 0 .108-.064l6.286-6.286Z',
+  })
+  svg.appendChild(path)
+  return svg
+}
 
 function buildEditButton(points: HillPoint[]): HTMLButtonElement {
   const btn = document.createElement('button')
   btn.setAttribute('data-testid', 'hillchart-inline-edit')
   btn.setAttribute('aria-label', 'Edit hill chart')
-  btn.innerHTML = PENCIL_SVG
+  btn.appendChild(buildPencilIcon())
   Object.assign(btn.style, {
     position: 'absolute',
     top: '8px',
@@ -54,19 +79,6 @@ function buildEditButton(points: HillPoint[]): HTMLButtonElement {
     )
   })
   return btn
-}
-
-const SVG_NS = 'http://www.w3.org/2000/svg'
-
-function svgEl<K extends keyof SVGElementTagNameMap>(
-  tag: K,
-  attrs: Record<string, string> = {},
-): SVGElementTagNameMap[K] {
-  const el = document.createElementNS(SVG_NS, tag)
-  for (const [k, v] of Object.entries(attrs)) {
-    el.setAttribute(k, v)
-  }
-  return el
 }
 
 export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
