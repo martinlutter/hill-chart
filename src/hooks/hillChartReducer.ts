@@ -1,6 +1,6 @@
 import type { HillPoint } from '../types/index.js'
 
-export type PanelState = 'hidden' | 'viewing' | 'editing' | 'saving' | 'error'
+export type PanelState = 'hidden' | 'editing' | 'saving' | 'error'
 
 export interface HillChartState {
   panelState: PanelState
@@ -29,7 +29,7 @@ export function hillChartReducer(
   switch (action.type) {
     case 'OPEN':
       if (state.savedPoints.length > 0) {
-        return { ...state, panelState: 'viewing' }
+        return { ...state, panelState: 'editing', draftPoints: [...state.savedPoints] }
       }
       return { ...state, panelState: 'editing', draftPoints: [] }
 
@@ -39,7 +39,7 @@ export function hillChartReducer(
     case 'CANCEL':
       return {
         ...state,
-        panelState: state.savedPoints.length > 0 ? 'viewing' : 'hidden',
+        panelState: 'hidden',
       }
 
     case 'SAVE_START':

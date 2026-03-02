@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import type { HillPoint } from '../types/index.js'
 import { encode } from '../data/codec.js'
 import { writeHillChartComment } from '../github/commentWriter.js'
-import { HillChartViewer } from './HillChartViewer.js'
 import { HillChartEditor } from './HillChartEditor.js'
 import { PointList } from './PointList.js'
 import { AddPointForm } from './AddPointForm.js'
@@ -26,7 +25,7 @@ export function HillChartWidget({
   toolbarAnchor,
 }: HillChartWidgetProps) {
   const [state, dispatch] = useHillChartReducer(issueBodyText)
-  const { panelState, savedPoints, draftPoints, errorMsg } = state
+  const { panelState, draftPoints, errorMsg } = state
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   // ── Hooks ─────────────────────────────────────────────────────────────────
@@ -63,14 +62,7 @@ export function HillChartWidget({
 
   // ── Panel body ────────────────────────────────────────────────────────────
   let panelBody: React.ReactNode = null
-  if (panelState === 'viewing') {
-    panelBody = (
-      <HillChartViewer
-        points={savedPoints}
-        onEditRequest={() => dispatch({ type: 'EDIT', points: savedPoints })}
-      />
-    )
-  } else if (panelState === 'editing' || panelState === 'saving') {
+  if (panelState === 'editing' || panelState === 'saving') {
     panelBody = (
       <>
         <HillChartEditor
@@ -161,8 +153,7 @@ export function HillChartWidget({
     )
   }
 
-  const panelTitle =
-    panelState === 'viewing' ? 'Hill Chart' : 'Edit Hill Chart'
+  const panelTitle = 'Edit Hill Chart'
 
   return (
     <>

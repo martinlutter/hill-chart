@@ -269,11 +269,12 @@ test.describe('Viewer — existing chart data', () => {
     await expect(circles).toHaveCount(3)
   })
 
-  test('viewer shows an Edit Hill Chart button', async ({ loadFixture }) => {
+  test('panel opens directly in edit mode with existing data', async ({ loadFixture }) => {
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
+    // Should be in edit mode immediately (add-point form visible)
     await expect(
-      inShadow(page).locator('button:has-text("Edit Hill Chart")'),
+      inShadow(page).locator('[data-testid="add-point-form"]'),
     ).toBeVisible()
   })
 })
@@ -314,10 +315,6 @@ test.describe('Drag interaction', () => {
   }) => {
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
-    const shadow = inShadow(page)
-
-    // Switch to edit mode (fixture has existing data so viewer opens first)
-    await shadow.locator('button:has-text("Edit Hill Chart")').click()
 
     // Get initial screen position and SVG cx of the "JWT handling" point (x=30)
     const initialState = await page.evaluate(() => {
@@ -586,23 +583,21 @@ test.describe('Save and cancel', () => {
     expect(clipboardText).toContain('```hillchart')
   })
 
-  test('clicking Cancel discards changes and returns to viewer', async ({
+  test('clicking Cancel closes the panel', async ({
     loadFixture,
   }) => {
     const page = await loadFixture('github-issue.html')
     await page.locator('[data-testid="hillchart-button"]').click()
     const shadow = inShadow(page)
 
-    await shadow.locator('button:has-text("Edit Hill Chart")').click()
     await shadow
       .locator('[data-testid="point-description-input"]')
       .fill('New point')
     await shadow.locator('[data-testid="add-point-submit"]').click()
     await shadow.locator('[data-testid="hillchart-cancel"]').click()
 
-    // Should revert to viewer with original 3 saved points (no transparent circles in viewer)
-    await expect(
-      shadow.locator('circle:not([fill="transparent"])'),
-    ).toHaveCount(3)
+    // Panel should be closed
+    const panel = shadow.locator('[data-testid="hillchart-panel"]')
+    await expect(panel).not.toHaveAttribute('open')
   })
 })
