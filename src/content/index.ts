@@ -42,6 +42,27 @@ function mount(): () => void {
     })
   }
 
+  // Prevent pointerdown/mousedown from reaching other extensions (e.g. Zenhub)
+  // that use capture-phase "outside click" listeners to close their UI.
+  // Composed events cross shadow boundaries, so we intercept them in the
+  // capture phase on document and re-dispatch non-composed clones that stay
+  // inside the shadow DOM where React's delegated handlers live.
+  const captureHandlers: Array<[string, (e: Event) => void]> = []
+  for (const eventType of ['pointerdown', 'mousedown'] as const) {
+    const handler = (e: Event) => {
+      if (!e.composedPath().includes(host)) return
+
+      e.stopImmediatePropagation()
+
+      const Ctor = e instanceof PointerEvent ? PointerEvent : MouseEvent
+      ;(e.composedPath()[0] as Element).dispatchEvent(
+        new Ctor(e.type, { ...e, composed: false, bubbles: true }),
+      )
+    }
+    document.addEventListener(eventType, handler, true)
+    captureHandlers.push([eventType, handler])
+  }
+
   // React render container inside the shadow root
   const container = document.createElement('div')
   shadow.appendChild(container)
@@ -68,13 +89,16 @@ function mount(): () => void {
   const cleanupObserver = observeInlineCharts()
 
   // Watch for the toolbar anchor to appear or change (e.g. GitHub React
-  // painting after navigation, or Zenhub tearing down and re-creating the DOM).
+  // painting after navigation, or another extension re-creating the DOM).
   const cleanupRetry = observeIssuePage(
     page.toolbarAnchor,
     (ready) => renderWidget(ready.toolbarAnchor, ready.issueBodyText, ready.commentTextarea),
   )
 
   return () => {
+    for (const [event, handler] of captureHandlers) {
+      document.removeEventListener(event, handler, true)
+    }
     cleanupRetry()
     cleanupObserver()
     cleanupInline()

@@ -63,6 +63,10 @@ function patchHistory(): void {
  * GitHub's Turbo/Pjax page transitions. Calls `mount()` immediately on
  * setup and then after each navigation event.
  *
+ * Also polls for URL changes as a fallback — other extensions (e.g. Zenhub)
+ * may navigate via pushState before our patch is injected, bypassing all
+ * event-based detection.
+ *
  * Returns a teardown function that removes all listeners and runs the
  * last mount's cleanup.
  */
@@ -84,9 +88,6 @@ export function setupNavigation(mount: MountFn): Cleanup {
     window.addEventListener(event, handleNavigation)
   }
 
-  // Fallback: poll for URL changes that other extensions (e.g. Zenhub) may
-  // trigger without going through pushState/replaceState in a way our patch
-  // can intercept.
   const pollId = setInterval(() => {
     if (location.href !== lastHref) {
       lastHref = location.href
