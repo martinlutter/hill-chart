@@ -69,8 +69,10 @@ function patchHistory(): void {
 export function setupNavigation(mount: MountFn): Cleanup {
   patchHistory()
   let currentCleanup: Cleanup = mount()
+  let lastHref = location.href
 
   function handleNavigation(): void {
+    lastHref = location.href
     currentCleanup()
     currentCleanup = mount()
   }
@@ -82,7 +84,18 @@ export function setupNavigation(mount: MountFn): Cleanup {
     window.addEventListener(event, handleNavigation)
   }
 
+  // Fallback: poll for URL changes that other extensions (e.g. Zenhub) may
+  // trigger without going through pushState/replaceState in a way our patch
+  // can intercept.
+  const pollId = setInterval(() => {
+    if (location.href !== lastHref) {
+      lastHref = location.href
+      handleNavigation()
+    }
+  }, 500)
+
   return () => {
+    clearInterval(pollId)
     currentCleanup()
     for (const event of DOC_EVENTS) {
       document.removeEventListener(event, handleNavigation)

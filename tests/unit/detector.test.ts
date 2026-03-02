@@ -127,7 +127,7 @@ describe('observeIssuePage', () => {
 
   it('calls onReady when the toolbar anchor is added to the DOM', async () => {
     const onReady = vi.fn()
-    const cleanup = observeIssuePage(onReady)
+    const cleanup = observeIssuePage(null, onReady)
 
     document.body.innerHTML = '<div data-component="PH_Actions"></div>'
     await Promise.resolve()
@@ -138,7 +138,7 @@ describe('observeIssuePage', () => {
 
   it('passes full PageElements to onReady', async () => {
     const onReady = vi.fn()
-    observeIssuePage(onReady)
+    observeIssuePage(null, onReady)
 
     document.body.innerHTML = `
       <div data-component="PH_Actions"></div>
@@ -160,7 +160,7 @@ describe('observeIssuePage', () => {
 
   it('does not call onReady for mutations that do not include the toolbar', async () => {
     const onReady = vi.fn()
-    const cleanup = observeIssuePage(onReady)
+    const cleanup = observeIssuePage(null, onReady)
 
     document.body.appendChild(document.createElement('p'))
     await Promise.resolve()
@@ -169,23 +169,41 @@ describe('observeIssuePage', () => {
     cleanup()
   })
 
-  it('is one-shot — disconnects after the first match', async () => {
-    const onReady = vi.fn()
-    observeIssuePage(onReady)
+  it('calls onReady when the toolbar anchor element changes', async () => {
+    const oldAnchor = document.createElement('div')
+    oldAnchor.setAttribute('data-component', 'PH_Actions')
+    document.body.appendChild(oldAnchor)
 
+    const onReady = vi.fn()
+    const cleanup = observeIssuePage(oldAnchor, onReady)
+
+    // Replace with a new element
     document.body.innerHTML = '<div data-component="PH_Actions"></div>'
     await Promise.resolve()
-    expect(onReady).toHaveBeenCalledOnce()
 
-    // Further mutations should not re-trigger
-    document.body.appendChild(document.createElement('div'))
-    await Promise.resolve()
     expect(onReady).toHaveBeenCalledOnce()
+    cleanup()
+  })
+
+  it('does not call onReady when the same anchor element is still present', async () => {
+    const anchor = document.createElement('div')
+    anchor.setAttribute('data-component', 'PH_Actions')
+    document.body.appendChild(anchor)
+
+    const onReady = vi.fn()
+    const cleanup = observeIssuePage(anchor, onReady)
+
+    // Unrelated mutation
+    document.body.appendChild(document.createElement('p'))
+    await Promise.resolve()
+
+    expect(onReady).not.toHaveBeenCalled()
+    cleanup()
   })
 
   it('cleanup prevents onReady from being called', async () => {
     const onReady = vi.fn()
-    const cleanup = observeIssuePage(onReady)
+    const cleanup = observeIssuePage(null, onReady)
     cleanup()
 
     document.body.innerHTML = '<div data-component="PH_Actions"></div>'

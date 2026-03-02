@@ -44,15 +44,21 @@ export function detectIssuePage(url = window.location.href): PageElements {
 }
 
 /**
- * Watches for the issue page DOM to become ready (GitHub React may paint after
- * the navigation event fires). Calls `onReady` once with the resolved elements
- * and disconnects. Returns a cleanup function.
+ * Watches for the issue page DOM to become ready or change (e.g. when another
+ * extension like Zenhub tears down and re-creates the page content).
+ * Calls `onReady` whenever the toolbar anchor element changes (including the
+ * first time it appears). Returns a cleanup function.
  */
-export function observeIssuePage(onReady: (page: PageElements) => void): () => void {
+export function observeIssuePage(
+  currentAnchor: Element | null,
+  onReady: (page: PageElements) => void,
+): () => void {
+  let knownAnchor = currentAnchor
   const observer = new MutationObserver(() => {
     const page = detectIssuePage()
     if (!page.toolbarAnchor) return
-    observer.disconnect()
+    if (page.toolbarAnchor === knownAnchor) return
+    knownAnchor = page.toolbarAnchor
     onReady(page)
   })
   observer.observe(document.body, { childList: true, subtree: true })

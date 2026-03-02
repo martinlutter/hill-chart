@@ -67,15 +67,15 @@ function mount(): () => void {
   const cleanupInline = renderInlineCharts()
   const cleanupObserver = observeInlineCharts()
 
-  // When navigating via Turbo/Pjax, `turbo:load` fires before GitHub's React
-  // has painted the issue page. If the toolbar anchor wasn't in the DOM yet,
-  // watch for it and re-render once the page content is ready.
-  const cleanupRetry = !page.toolbarAnchor
-    ? observeIssuePage((ready) => renderWidget(ready.toolbarAnchor, ready.issueBodyText, ready.commentTextarea))
-    : null
+  // Watch for the toolbar anchor to appear or change (e.g. GitHub React
+  // painting after navigation, or Zenhub tearing down and re-creating the DOM).
+  const cleanupRetry = observeIssuePage(
+    page.toolbarAnchor,
+    (ready) => renderWidget(ready.toolbarAnchor, ready.issueBodyText, ready.commentTextarea),
+  )
 
   return () => {
-    cleanupRetry?.()
+    cleanupRetry()
     cleanupObserver()
     cleanupInline()
     root.unmount()
