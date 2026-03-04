@@ -28,3 +28,6 @@ test-results
 # Packaged artifacts
 *.zip
 *.xpi
+*.crx
+
+chrome-pack-key.pem
