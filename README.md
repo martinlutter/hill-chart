@@ -22,19 +22,19 @@ Data is saved directly through GitHub's comment form (no API token required). Ch
   <img src="docs/screenshots/rendered.png" alt="Hill Chart rendered inline in a GitHub issue comment" width="700">
 </p>
 
-## Install
+## Install from the release
 
 ### Chrome
 
-1. Download the release file (and extract) or `npm install && npm run build`
+1. Clone the repository and `npm install && npm run build`
 2. Open `chrome://extensions`, enable Developer Mode
 3. Click "Load unpacked" and select the `dist/` folder
 
 ### Firefox
 
-1. Download the release file or `npm install && npm run build:firefox`
+1. Download the release file or clone the repository and `npm install && npm run build:firefox`
 2. Open `about:debugging#/runtime/this-firefox`
-3. Click "Load Temporary Add-on" and select any file in `dist-firefox/`
+3. Click "Load Temporary Add-on" and select the .xpi in `dist-firefox/`
 
 ## Development
 
