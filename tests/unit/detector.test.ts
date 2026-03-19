@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { detectIssuePage, observeIssuePage } from '../../src/github/detector.js'
+import { detectIssuePage, observeIssuePage, findCommentTextarea } from '../../src/github/detector.js'
 
 const ISSUE_URL = 'https://github.com/martinlutter/skills-expand-your-team-with-copilot/issues/9'
 
@@ -58,12 +58,6 @@ describe('detectIssuePage — URL detection', () => {
 })
 
 describe('detectIssuePage — DOM element retrieval', () => {
-  it('finds commentTextarea via [class^="CommentBox"] fieldset[class^="MarkdownEditor"] textarea', () => {
-    const result = detectIssuePage(ISSUE_URL)
-    expect(result.commentTextarea).not.toBeNull()
-    expect(result.commentTextarea?.tagName).toBe('TEXTAREA')
-  })
-
   it('finds toolbarAnchor via [data-component="PH_Actions"]', () => {
     const result = detectIssuePage(ISSUE_URL)
     expect(result.toolbarAnchor).not.toBeNull()
@@ -91,22 +85,12 @@ describe('detectIssuePage — missing DOM elements', () => {
     expect(result.issueBodyText).toBe('')
   })
 
-  it('returns null commentTextarea when CommentBox is absent', () => {
-    document.body.innerHTML = `
-      <div data-testid="issue-body-viewer">
-        <div data-testid="markdown-body" class="markdown-body"></div>
-      </div>
-    `
-    const result = detectIssuePage(ISSUE_URL)
-    expect(result.commentTextarea).toBeNull()
-  })
 })
 
 describe('detectIssuePage — non-issue page returns all nulls', () => {
   it('returns empty result for a list URL', () => {
     const result = detectIssuePage('https://github.com/octocat/repo/issues')
     expect(result.isIssuePage).toBe(false)
-    expect(result.commentTextarea).toBeNull()
     expect(result.toolbarAnchor).toBeNull()
     expect(result.issueBodyText).toBe('')
   })
@@ -155,7 +139,6 @@ describe('observeIssuePage', () => {
     expect(page.isIssuePage).toBe(true)
     expect(page.toolbarAnchor).not.toBeNull()
     expect(page.issueBodyText).toContain('hello')
-    expect(page.commentTextarea).not.toBeNull()
   })
 
   it('does not call onReady for mutations that do not include the toolbar', async () => {
@@ -210,5 +193,21 @@ describe('observeIssuePage', () => {
     await Promise.resolve()
 
     expect(onReady).not.toHaveBeenCalled()
+  })
+})
+
+describe('findCommentTextarea', () => {
+  afterEach(() => { document.body.innerHTML = '' })
+
+  it('finds textarea via [class^="CommentBox"] fieldset[class^="MarkdownEditor"] textarea', () => {
+    buildDOM()
+    const textarea = findCommentTextarea()
+    expect(textarea).not.toBeNull()
+    expect(textarea?.tagName).toBe('TEXTAREA')
+  })
+
+  it('returns null when CommentBox is absent', () => {
+    document.body.innerHTML = '<div data-testid="issue-body-viewer"></div>'
+    expect(findCommentTextarea()).toBeNull()
   })
 })

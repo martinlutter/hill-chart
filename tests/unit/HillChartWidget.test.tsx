@@ -22,13 +22,12 @@ const POINTS: HillPoint[] = [
   { id: 'p2', description: 'JWT handling', x: 30, y: 50, color: '#10b981' },
 ]
 
-function renderWidget(opts?: { commentTextarea?: HTMLTextAreaElement | null }) {
+function renderWidget() {
   const anchor = document.createElement('div')
   document.body.appendChild(anchor)
   return render(
     <HillChartWidget
       issueBodyText=""
-      commentTextarea={opts?.commentTextarea ?? null}
       toolbarAnchor={anchor}
     />,
   )
@@ -81,8 +80,17 @@ describe('Copy to clipboard', () => {
 
 describe('Paste to comment', () => {
   it('writes encoded data to the textarea and closes the panel', () => {
+    // Place a textarea matching the GitHub CommentBox selector in the DOM
+    const wrapper = document.createElement('div')
+    wrapper.className = 'CommentBox'
+    const fieldset = document.createElement('fieldset')
+    fieldset.className = 'MarkdownEditor'
     const textarea = document.createElement('textarea')
-    renderWidget({ commentTextarea: textarea })
+    fieldset.appendChild(textarea)
+    wrapper.appendChild(fieldset)
+    document.body.appendChild(wrapper)
+
+    renderWidget()
     openEditorWithPoints()
 
     act(() => {
@@ -96,10 +104,12 @@ describe('Paste to comment', () => {
     // Textarea should contain encoded data
     const expected = encode({ version: '1', points: POINTS })
     expect(textarea.value).toBe(expected)
+
+    wrapper.remove()
   })
 
   it('shows error when no textarea is available', () => {
-    renderWidget({ commentTextarea: null })
+    renderWidget()
     openEditorWithPoints()
 
     act(() => {

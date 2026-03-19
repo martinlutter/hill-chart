@@ -1,6 +1,5 @@
 export interface PageElements {
   isIssuePage: boolean
-  commentTextarea: HTMLTextAreaElement | null
   toolbarAnchor: Element | null
   /** Raw innerHTML of the first issue body comment — contains the hillchart HTML comment block */
   issueBodyText: string
@@ -12,7 +11,6 @@ const ISSUE_PATH_RE = /^\/[^/]+\/[^/]+\/issues\/\d+$/
 export function detectIssuePage(url = window.location.href): PageElements {
   const empty: PageElements = {
     isIssuePage: false,
-    commentTextarea: null,
     toolbarAnchor: null,
     issueBodyText: '',
   }
@@ -30,14 +28,10 @@ export function detectIssuePage(url = window.location.href): PageElements {
   const issueBodyEl = document.querySelector(
     '[data-testid="issue-body-viewer"]',
   )
-  const commentTextarea = document.querySelector<HTMLTextAreaElement>(
-    '[class^="CommentBox"] fieldset[class^="MarkdownEditor"] textarea',
-  )
   const toolbarAnchor = document.querySelector('[data-component="PH_Actions"]')
 
   return {
     isIssuePage: true,
-    commentTextarea,
     toolbarAnchor,
     issueBodyText: issueBodyEl?.innerHTML ?? '',
   }
@@ -63,6 +57,13 @@ export function observeIssuePage(
   })
   observer.observe(document.body, { childList: true, subtree: true })
   return () => observer.disconnect()
+}
+
+/** Re-queries the DOM for GitHub's comment textarea (may appear after initial page load). */
+export function findCommentTextarea(): HTMLTextAreaElement | null {
+  return document.querySelector<HTMLTextAreaElement>(
+    '[class^="CommentBox"] fieldset[class^="MarkdownEditor"] textarea',
+  )
 }
 
 /** Returns all elements on the page that could contain hillchart data. */

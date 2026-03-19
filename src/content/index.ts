@@ -72,18 +72,16 @@ function mount(): () => void {
   function renderWidget(
     toolbarAnchor: Element | null,
     issueBodyText: string,
-    commentTextarea: HTMLTextAreaElement | null,
   ): void {
     root.render(
       React.createElement(HillChartWidget, {
         issueBodyText,
-        commentTextarea,
         toolbarAnchor,
       }),
     )
   }
 
-  renderWidget(page.toolbarAnchor, page.issueBodyText, page.commentTextarea)
+  renderWidget(page.toolbarAnchor, page.issueBodyText)
 
   const cleanupInline = renderInlineCharts()
   const cleanupObserver = observeInlineCharts()
@@ -92,7 +90,7 @@ function mount(): () => void {
   // painting after navigation, or another extension re-creating the DOM).
   const cleanupRetry = observeIssuePage(
     page.toolbarAnchor,
-    (ready) => renderWidget(ready.toolbarAnchor, ready.issueBodyText, ready.commentTextarea),
+    (ready) => renderWidget(ready.toolbarAnchor, ready.issueBodyText),
   )
 
   return () => {

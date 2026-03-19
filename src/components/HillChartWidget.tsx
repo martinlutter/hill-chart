@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import type { HillPoint } from '../types/index.js'
 import { encode } from '../data/codec.js'
 import { writeHillChartComment } from '../github/commentWriter.js'
+import { findCommentTextarea } from '../github/detector.js'
 import { HillChartEditor } from './HillChartEditor.js'
 import { PointList } from './PointList.js'
 import { AddPointForm } from './AddPointForm.js'
@@ -13,15 +14,12 @@ import { useInlineEditListener } from '../hooks/useInlineEditListener.js'
 export interface HillChartWidgetProps {
   /** Raw innerHTML of the first issue body — contains the hillchart HTML comment block */
   issueBodyText: string
-  /** GitHub's comment textarea — used for write-back */
-  commentTextarea: HTMLTextAreaElement | null
   /** Where to portal the "Hill Chart" trigger button in the host page */
   toolbarAnchor: Element | null
 }
 
 export function HillChartWidget({
   issueBodyText,
-  commentTextarea,
   toolbarAnchor,
 }: HillChartWidgetProps) {
   const [state, dispatch] = useHillChartReducer(issueBodyText)
@@ -40,19 +38,20 @@ export function HillChartWidget({
 
   // ── Side-effect callbacks ─────────────────────────────────────────────────
   const handleSave = useCallback(() => {
-    if (!commentTextarea) {
+    const textarea = findCommentTextarea()
+    if (!textarea) {
       dispatch({ type: 'SAVE_FAILURE', error: 'GitHub comment textarea not found — cannot save.' })
       return
     }
     dispatch({ type: 'SAVE_START' })
     const encoded = encode({ version: '1', points: draftPoints })
-    const result = writeHillChartComment(commentTextarea, encoded)
+    const result = writeHillChartComment(textarea, encoded)
     if (result.ok) {
       dispatch({ type: 'SAVE_SUCCESS', savedPoints: draftPoints })
     } else {
       dispatch({ type: 'SAVE_FAILURE', error: result.error ?? 'Unknown error' })
     }
-  }, [commentTextarea, draftPoints, dispatch])
+  }, [draftPoints, dispatch])
 
   const handleCopyToClipboard = useCallback(async () => {
     const encoded = encode({ version: '1', points: draftPoints })
