@@ -359,6 +359,42 @@ test.describe('Drag interaction', () => {
     expect(newCx).not.toBeNull()
     expect(newCx).toBeGreaterThan(initialState!.cx)
   })
+
+  test('dragging a point does not select text', async ({ loadFixture }) => {
+    const page = await loadFixture('github-issue.html')
+    await page.locator('[data-testid="hillchart-button"]').click()
+
+    // Get screen position of the "JWT handling" point
+    const pos = await page.evaluate(() => {
+      const host = document.getElementById('hillchart-extension-root')
+      const group = host?.shadowRoot?.querySelector<SVGGElement>(
+        '[data-point-id="bbbb-2222"]',
+      )
+      const hitCircle = group?.querySelector<SVGCircleElement>(
+        'circle[fill="transparent"]',
+      )
+      if (!hitCircle) return null
+      const rect = hitCircle.getBoundingClientRect()
+      return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      }
+    })
+    expect(pos).not.toBeNull()
+
+    // Drag across the chart (over labels and phase text)
+    await page.mouse.move(pos!.x, pos!.y)
+    await page.mouse.down()
+    await page.mouse.move(pos!.x + 120, pos!.y - 30, { steps: 15 })
+
+    // While still dragging, check no text is selected
+    const selectedText = await page.evaluate(() =>
+      window.getSelection()?.toString() ?? '',
+    )
+    expect(selectedText).toBe('')
+
+    await page.mouse.up()
+  })
 })
 
 // ── Inline chart rendering ───────────────────────────────────────────────────

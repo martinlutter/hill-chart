@@ -45,6 +45,7 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (!draggingId) return
+      e.preventDefault()
       const svgX = getSvgX(e.clientX)
       const newPct = svgXToPercent(svgX)
       const updated = points.map((pt) =>
@@ -69,7 +70,11 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
         width="100%"
         aria-label="Hill chart editor"
         role="img"
-        style={{ cursor: draggingId ? 'grabbing' : 'default' }}
+        style={{
+          cursor: draggingId ? 'grabbing' : 'default',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+        }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
