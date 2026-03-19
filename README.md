@@ -22,19 +22,24 @@ Data is saved directly through GitHub's comment form (no API token required). Ch
   <img src="docs/screenshots/rendered.png" alt="Hill Chart rendered inline in a GitHub issue comment" width="700">
 </p>
 
-## Install from the release
+## Install
 
-### Chrome
+- **Chrome**: [Hill Chart for GitHub on Chrome Web Store](https://chromewebstore.google.com/detail/hill-chart-for-github/nkbobocjbelcamcmpnhkcmidaofjoanf)
+- **Firefox**: [Hill Charts for GitHub on Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/hill-charts-for-github)
 
-1. Clone the repository and `npm install && npm run build`
+### Build from source
+
+#### Chrome
+
+1. Clone the repository and `npm install && npm run build:chrome`
 2. Open `chrome://extensions`, enable Developer Mode
 3. Click "Load unpacked" and select the `dist/` folder
 
-### Firefox
+#### Firefox
 
-1. Download the release file or clone the repository and `npm install && npm run build:firefox`
+1. Clone the repository and `npm install && npm run build:firefox`
 2. Open `about:debugging#/runtime/this-firefox`
-3. Click "Load Temporary Add-on" and select the .xpi in `dist-firefox/`
+3. Click "Load Temporary Add-on" and select `manifest.json` in `dist-firefox/`
 
 ## Development
 
