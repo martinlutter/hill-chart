@@ -1,7 +1,7 @@
 {
   "name": "hill-chart",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Browser extension that embeds interactive Hill Charts into GitHub issue pages",
   "author": "Martin Lutter",
   "license": "MIT",
@@ -9,23 +9,29 @@
     "type": "git",
     "url": "https://github.com/martinlutter/hill-chart"
   },
-  "keywords": ["hill-chart", "github", "browser-extension", "chrome-extension", "firefox-extension"],
+  "keywords": [
+    "hill-chart",
+    "github",
+    "browser-extension",
+    "chrome-extension",
+    "firefox-extension"
+  ],
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "dev": "vite build --watch",
-    "build": "vite build",
-    "build:firefox": "vite build --config vite.firefox.config.ts && cd dist-firefox && zip -r dist-firefox.xpi . && cd ..",
+    "build:chrome": "vite build",
+    "build:firefox": "vite build --config vite.firefox.config.ts",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:e2e": "npm run build && playwright test",
+    "test:e2e": "npm run build:chrome && playwright test",
     "typecheck": "tsc -b",
     "lint": "eslint .",
-    "pack:source": "bash scripts/pack-source.sh"
+    "release": "bash scripts/release.sh"
   },
   "dependencies": {
     "react": "^19.2.0",

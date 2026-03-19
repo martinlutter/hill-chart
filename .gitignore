@@ -31,3 +31,4 @@ test-results
 *.crx
 
 chrome-pack-key.pem
+release/
