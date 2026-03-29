@@ -138,22 +138,22 @@ describe('resolveLabels', () => {
     expect(layout.hasConnector).toBe(false)
   })
 
-  it('single point at x=0 with long label: label clamped inside left bound', () => {
+  it('single point at x=0 with long label: label clamped to left SVG edge (including padding)', () => {
     const desc = 'A very long label text'
     const input = pt('a', 0, desc)
     const halfW = measureLabelWidth(desc) / 2
     const [layout] = resolveLabels([input])
-    expect(layout.labelX).toBeGreaterThanOrEqual(CHART_PADDING_X + halfW - 0.01)
-    expect(layout.labelX).toBeLessThanOrEqual(SVG_WIDTH - CHART_PADDING_X)
+    expect(layout.labelX).toBeGreaterThanOrEqual(halfW - 0.01)
+    expect(layout.labelX).toBeLessThanOrEqual(SVG_WIDTH - halfW)
   })
 
-  it('single point at x=100 with long label: label clamped inside right bound', () => {
+  it('single point at x=100 with long label: label clamped to right SVG edge (including padding)', () => {
     const desc = 'A very long label text'
     const input = pt('a', 100, desc)
     const halfW = measureLabelWidth(desc) / 2
     const [layout] = resolveLabels([input])
-    expect(layout.labelX).toBeLessThanOrEqual(SVG_WIDTH - CHART_PADDING_X - halfW + 0.01)
-    expect(layout.labelX).toBeGreaterThanOrEqual(CHART_PADDING_X)
+    expect(layout.labelX).toBeLessThanOrEqual(SVG_WIDTH - halfW + 0.01)
+    expect(layout.labelX).toBeGreaterThanOrEqual(halfW)
   })
 
   it('two well-separated points keep their natural positions and no connectors', () => {
@@ -182,14 +182,14 @@ describe('resolveLabels', () => {
     expect(layouts.every((l) => l.hasConnector)).toBe(true)
   })
 
-  it('all labels remain within horizontal chart bounds after resolution', () => {
+  it('all labels remain within SVG bounds (including side padding) after resolution', () => {
     // 5 points clustered at the center
     const inputs = Array.from({ length: 5 }, (_, i) => pt(String(i), 50, 'Item'))
     const layouts = resolveLabels(inputs)
     const halfW = measureLabelWidth('Item') / 2
     for (const l of layouts) {
-      expect(l.labelX).toBeGreaterThanOrEqual(CHART_PADDING_X + halfW - 0.01)
-      expect(l.labelX).toBeLessThanOrEqual(SVG_WIDTH - CHART_PADDING_X - halfW + 0.01)
+      expect(l.labelX).toBeGreaterThanOrEqual(halfW - 0.01)
+      expect(l.labelX).toBeLessThanOrEqual(SVG_WIDTH - halfW + 0.01)
     }
   })
 

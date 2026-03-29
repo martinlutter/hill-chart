@@ -104,13 +104,11 @@ export function resolveLabels(
 ): LabelLayout[] {
   if (points.length === 0) return []
 
-  const minX = CHART_PADDING_X
-  const maxX = SVG_WIDTH - CHART_PADDING_X
   const GAP = 4 // minimum gap between adjacent label edges
 
   const items = points.map((pt) => {
     const halfW = measureLabelWidth(pt.description) / 2
-    const naturalX = Math.max(minX + halfW, Math.min(maxX - halfW, pt.cx))
+    const naturalX = Math.max(halfW, Math.min(SVG_WIDTH - halfW, pt.cx))
     return { id: pt.id, cx: pt.cx, cy: pt.cy, halfW, labelX: naturalX, naturalX }
   })
 
@@ -132,9 +130,9 @@ export function resolveLabels(
       }
     }
     if (!moved) break
-    // Clamp to chart bounds after each pass
+    // Clamp to full SVG width (including side padding) after each pass
     for (const item of items) {
-      item.labelX = Math.max(minX + item.halfW, Math.min(maxX - item.halfW, item.labelX))
+      item.labelX = Math.max(item.halfW, Math.min(SVG_WIDTH - item.halfW, item.labelX))
     }
   }
 
