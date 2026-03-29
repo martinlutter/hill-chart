@@ -159,7 +159,7 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
                     y1={labelY + 2}
                     x2={cx}
                     y2={cy - POINT_RADIUS - 2}
-                    stroke="#8b949e"
+                    stroke={pt.color}
                     strokeWidth="1"
                     opacity="0.6"
                     pointerEvents="none"
