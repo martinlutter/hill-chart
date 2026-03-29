@@ -8,6 +8,8 @@ import {
   SVG_HEIGHT,
   BASELINE_Y,
   PEAK_HEIGHT,
+  CHART_PADDING_X,
+  measureLabelWidth,
 } from '../hill-chart/hillMath.js'
 
 const INLINE_MARKER = 'data-hillchart-inline'
@@ -162,8 +164,15 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
     })
     g.appendChild(circle)
 
+    // Clamp the label center so the text stays within the chart.
+    // As the point nears an edge the label smoothly lags behind the point.
+    const labelHalfWidth = measureLabelWidth(pt.description) / 2
+    const labelX = Math.max(
+      CHART_PADDING_X + labelHalfWidth,
+      Math.min(SVG_WIDTH - CHART_PADDING_X - labelHalfWidth, cx),
+    )
     const label = svgEl('text', {
-      x: String(cx),
+      x: String(labelX),
       y: String(cy - LABEL_OFFSET),
       'text-anchor': 'middle',
       'font-size': '11',

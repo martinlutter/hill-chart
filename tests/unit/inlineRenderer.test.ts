@@ -66,6 +66,45 @@ describe('buildInlineChartSvg', () => {
     expect(path).not.toBeNull()
     expect(path!.getAttribute('d')).toContain('M')
   })
+
+  it('label for a point at x=0 is pushed right of the circle center (not centered behind the left border)', () => {
+    const desc = 'A long label here'
+    const svg = buildInlineChartSvg([{ id: 'edge', description: desc, x: 0, y: 0, color: '#f00' }])
+    const label = Array.from(svg.querySelectorAll('text')).find((t) => t.textContent === desc)!
+    const circle = svg.querySelector('circle')!
+    expect(parseFloat(label.getAttribute('x')!)).toBeGreaterThan(parseFloat(circle.getAttribute('cx')!))
+  })
+
+  it('label for a point at x=100 is pushed left of the circle center (not centered behind the right border)', () => {
+    const desc = 'A long label here'
+    const svg = buildInlineChartSvg([{ id: 'edge', description: desc, x: 100, y: 0, color: '#f00' }])
+    const label = Array.from(svg.querySelectorAll('text')).find((t) => t.textContent === desc)!
+    const circle = svg.querySelector('circle')!
+    expect(parseFloat(label.getAttribute('x')!)).toBeLessThan(parseFloat(circle.getAttribute('cx')!))
+  })
+
+  it('label for a point at x=50 is centered on the point', () => {
+    const svg = buildInlineChartSvg([{ id: 'mid', description: 'Middle point', x: 50, y: 0, color: '#f00' }])
+    const label = Array.from(svg.querySelectorAll('text')).find((t) => t.textContent === 'Middle point')!
+    const circle = svg.querySelector('circle')!
+    expect(parseFloat(label.getAttribute('x')!)).toBe(parseFloat(circle.getAttribute('cx')!))
+  })
+
+  it('label x moves gradually as point moves from center toward left edge', () => {
+    const xAt = (pct: number) => {
+      const svg = buildInlineChartSvg([{ id: 'p', description: 'Label', x: pct, y: 0, color: '#f00' }])
+      const label = Array.from(svg.querySelectorAll('text')).find((t) => t.textContent === 'Label')!
+      return parseFloat(label.getAttribute('x')!)
+    }
+    // Moving left: label x should decrease (or stay clamped), never jump
+    const x50 = xAt(50)
+    const x25 = xAt(25)
+    const x10 = xAt(10)
+    const x0  = xAt(0)
+    expect(x50).toBeGreaterThan(x25)
+    expect(x25).toBeGreaterThanOrEqual(x10)
+    expect(x10).toBeGreaterThanOrEqual(x0)
+  })
 })
 
 describe('renderInlineCharts', () => {

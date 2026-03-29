@@ -52,6 +52,23 @@ export function svgXToPercent(
 }
 
 /**
+ * Returns the rendered pixel width of a label string at the given font size.
+ * Uses Canvas 2D measureText in browser contexts; falls back to a
+ * character-width heuristic when Canvas is unavailable (e.g. jsdom).
+ */
+export function measureLabelWidth(text: string, fontSize = 11): number {
+  if (typeof document !== 'undefined') {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      ctx.font = `${fontSize}px sans-serif`
+      return ctx.measureText(text).width
+    }
+  }
+  return text.length * fontSize * 0.6
+}
+
+/**
  * Converts a 0–100 percentage to an SVG x pixel coordinate.
  */
 export function percentToSvgX(

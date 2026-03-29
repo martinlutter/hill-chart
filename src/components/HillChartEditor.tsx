@@ -10,6 +10,7 @@ import {
   BASELINE_Y,
   PEAK_HEIGHT,
   CHART_PADDING_X,
+  measureLabelWidth,
 } from '../hill-chart/hillMath.js'
 
 interface HillChartEditorProps {
@@ -136,6 +137,13 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
           const cx = percentToSvgX(pt.x)
           const cy = hillY(pt.x, BASELINE_Y, PEAK_HEIGHT)
           const isDragging = pt.id === draggingId
+          // Clamp the label center so the text stays within the chart.
+          // As the point nears an edge the label smoothly lags behind the point.
+          const labelHalfWidth = measureLabelWidth(pt.description) / 2
+          const labelX = Math.max(
+            CHART_PADDING_X + labelHalfWidth,
+            Math.min(SVG_WIDTH - CHART_PADDING_X - labelHalfWidth, cx),
+          )
           return (
             <g
               key={pt.id}
@@ -161,7 +169,7 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
                 pointerEvents="none"
               />
               <text
-                x={cx}
+                x={labelX}
                 y={cy - LABEL_OFFSET}
                 textAnchor="middle"
                 fontSize="11"
