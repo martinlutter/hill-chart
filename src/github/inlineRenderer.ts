@@ -104,9 +104,9 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
 
   // Baseline
   const baseline = svgEl('line', {
-    x1: '0',
+    x1: String(CHART_PADDING_X),
     y1: String(BASELINE_Y),
-    x2: String(SVG_WIDTH),
+    x2: String(SVG_WIDTH - CHART_PADDING_X),
     y2: String(BASELINE_Y),
     stroke: '#30363d',
     'stroke-width': '1',
