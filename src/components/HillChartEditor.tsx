@@ -9,6 +9,7 @@ import {
   SVG_HEIGHT,
   BASELINE_Y,
   PEAK_HEIGHT,
+  CHART_PADDING_X,
 } from '../hill-chart/hillMath.js'
 
 interface HillChartEditorProps {
@@ -90,9 +91,9 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
 
         {/* Baseline */}
         <line
-          x1={0}
+          x1={CHART_PADDING_X}
           y1={BASELINE_Y}
-          x2={SVG_WIDTH}
+          x2={SVG_WIDTH - CHART_PADDING_X}
           y2={BASELINE_Y}
           stroke="#30363d"
           strokeWidth="1"

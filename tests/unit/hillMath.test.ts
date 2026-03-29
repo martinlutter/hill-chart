@@ -7,6 +7,7 @@ import {
   SVG_WIDTH,
   BASELINE_Y,
   PEAK_HEIGHT,
+  CHART_PADDING_X,
 } from '../../src/hill-chart/hillMath.js'
 
 describe('hillY', () => {
@@ -46,32 +47,33 @@ describe('buildHillPath', () => {
     expect(path.length).toBeGreaterThan(0)
   })
 
-  it('starts at x=0', () => {
+  it('starts at x=CHART_PADDING_X', () => {
     const path = buildHillPath()
-    expect(path).toMatch(/^M0\.00/)
+    expect(path).toMatch(new RegExp(`^M${CHART_PADDING_X.toFixed(2)}`))
   })
 
-  it('ends near x=svgWidth', () => {
+  it('ends at x=SVG_WIDTH - CHART_PADDING_X', () => {
     const path = buildHillPath(SVG_WIDTH)
-    expect(path).toMatch(new RegExp(`L${SVG_WIDTH.toFixed(2)}`))
+    const endX = (SVG_WIDTH - CHART_PADDING_X).toFixed(2)
+    expect(path).toMatch(new RegExp(`L${endX}`))
   })
 })
 
 describe('svgXToPercent', () => {
-  it('converts 0 → 0', () => {
-    expect(svgXToPercent(0)).toBe(0)
+  it('converts CHART_PADDING_X → 0', () => {
+    expect(svgXToPercent(CHART_PADDING_X)).toBe(0)
   })
 
-  it('converts svgWidth → 100', () => {
-    expect(svgXToPercent(SVG_WIDTH)).toBe(100)
+  it('converts SVG_WIDTH - CHART_PADDING_X → 100', () => {
+    expect(svgXToPercent(SVG_WIDTH - CHART_PADDING_X)).toBe(100)
   })
 
   it('converts midpoint → 50', () => {
     expect(svgXToPercent(SVG_WIDTH / 2)).toBeCloseTo(50)
   })
 
-  it('clamps negative values to 0', () => {
-    expect(svgXToPercent(-50)).toBe(0)
+  it('clamps values left of padding to 0', () => {
+    expect(svgXToPercent(0)).toBe(0)
   })
 
   it('clamps values beyond svgWidth to 100', () => {
@@ -80,12 +82,12 @@ describe('svgXToPercent', () => {
 })
 
 describe('percentToSvgX', () => {
-  it('converts 0 → 0', () => {
-    expect(percentToSvgX(0)).toBe(0)
+  it('converts 0 → CHART_PADDING_X', () => {
+    expect(percentToSvgX(0)).toBe(CHART_PADDING_X)
   })
 
-  it('converts 100 → svgWidth', () => {
-    expect(percentToSvgX(100)).toBe(SVG_WIDTH)
+  it('converts 100 → SVG_WIDTH - CHART_PADDING_X', () => {
+    expect(percentToSvgX(100)).toBe(SVG_WIDTH - CHART_PADDING_X)
   })
 
   it('round-trips with svgXToPercent', () => {
