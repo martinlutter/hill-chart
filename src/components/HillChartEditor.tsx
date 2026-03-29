@@ -10,7 +10,7 @@ import {
   BASELINE_Y,
   PEAK_HEIGHT,
   CHART_PADDING_X,
-  measureLabelWidth,
+  resolveLabels,
 } from '../hill-chart/hillMath.js'
 
 interface HillChartEditorProps {
@@ -20,7 +20,6 @@ interface HillChartEditorProps {
 
 const POINT_RADIUS = 10
 const HIT_RADIUS = 18
-const LABEL_OFFSET = 16
 
 export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -133,55 +132,71 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
         </text>
 
         {/* Points */}
-        {points.map((pt) => {
-          const cx = percentToSvgX(pt.x)
-          const cy = hillY(pt.x, BASELINE_Y, PEAK_HEIGHT)
-          const isDragging = pt.id === draggingId
-          // Clamp the label center so the text stays within the chart.
-          // As the point nears an edge the label smoothly lags behind the point.
-          const labelHalfWidth = measureLabelWidth(pt.description) / 2
-          const labelX = Math.max(
-            CHART_PADDING_X + labelHalfWidth,
-            Math.min(SVG_WIDTH - CHART_PADDING_X - labelHalfWidth, cx),
+        {(() => {
+          const layouts = resolveLabels(
+            points.map((pt) => ({
+              id: pt.id,
+              cx: percentToSvgX(pt.x),
+              cy: hillY(pt.x, BASELINE_Y, PEAK_HEIGHT),
+              description: pt.description,
+            })),
           )
-          return (
-            <g
-              key={pt.id}
-              className="hill-point"
-              data-point-id={pt.id}
-              style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-            >
-              {/* Larger transparent hit area */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={HIT_RADIUS}
-                fill="transparent"
-                onMouseDown={(e) => handleMouseDown(e, pt.id)}
-              />
-              <circle
-                cx={cx}
-                cy={cy}
-                r={POINT_RADIUS}
-                fill={pt.color}
-                stroke={isDragging ? '#e6edf3' : '#0d1117'}
-                strokeWidth={isDragging ? 2.5 : 1.5}
-                pointerEvents="none"
-              />
-              <text
-                x={labelX}
-                y={cy - LABEL_OFFSET}
-                textAnchor="middle"
-                fontSize="11"
-                fill="#e6edf3"
-                pointerEvents="none"
-                className="hill-point-label"
+          const layoutMap = new Map(layouts.map((l) => [l.id, l]))
+          return points.map((pt) => {
+            const layout = layoutMap.get(pt.id)!
+            const { cx, cy, labelX, labelY, hasConnector } = layout
+            const isDragging = pt.id === draggingId
+            return (
+              <g
+                key={pt.id}
+                className="hill-point"
+                data-point-id={pt.id}
+                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
               >
-                {pt.description}
-              </text>
-            </g>
-          )
-        })}
+                {hasConnector && (
+                  <line
+                    x1={labelX}
+                    y1={labelY + 2}
+                    x2={cx}
+                    y2={cy - POINT_RADIUS - 2}
+                    stroke="#8b949e"
+                    strokeWidth="1"
+                    opacity="0.6"
+                    pointerEvents="none"
+                  />
+                )}
+                {/* Larger transparent hit area */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={HIT_RADIUS}
+                  fill="transparent"
+                  onMouseDown={(e) => handleMouseDown(e, pt.id)}
+                />
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={POINT_RADIUS}
+                  fill={pt.color}
+                  stroke={isDragging ? '#e6edf3' : '#0d1117'}
+                  strokeWidth={isDragging ? 2.5 : 1.5}
+                  pointerEvents="none"
+                />
+                <text
+                  x={labelX}
+                  y={labelY}
+                  textAnchor="middle"
+                  fontSize="11"
+                  fill="#e6edf3"
+                  pointerEvents="none"
+                  className="hill-point-label"
+                >
+                  {pt.description}
+                </text>
+              </g>
+            )
+          })
+        })()}
       </svg>
     </div>
   )

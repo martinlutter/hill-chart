@@ -5,6 +5,8 @@ export const PEAK_HEIGHT = 140
 export const BASELINE_Y = 175
 // Horizontal padding so points at 0% and 100% are not clipped by the SVG edge
 export const CHART_PADDING_X = 24
+// Vertical distance from point center to label baseline
+export const LABEL_OFFSET = 16
 
 /**
  * Returns the SVG y-coordinate for a given 0–100 percentage position along the hill.
@@ -77,4 +79,71 @@ export function percentToSvgX(
   paddingX = CHART_PADDING_X,
 ): number {
   return paddingX + (pct / 100) * (svgWidth - 2 * paddingX)
+}
+
+export interface LabelLayout {
+  id: string
+  labelX: number
+  labelY: number
+  cx: number
+  cy: number
+  /** True when the label was nudged far enough from its point to warrant a connector line */
+  hasConnector: boolean
+}
+
+/**
+ * Resolves label positions for a set of points, pushing overlapping labels
+ * apart horizontally until no two labels overlap.
+ *
+ * Labels are sorted by natural x position and nudged symmetrically outward in
+ * iterative passes. A connector flag is set when the label moved more than a
+ * small threshold from its natural anchor so callers can draw a tick line.
+ */
+export function resolveLabels(
+  points: Array<{ id: string; cx: number; cy: number; description: string }>,
+): LabelLayout[] {
+  if (points.length === 0) return []
+
+  const minX = CHART_PADDING_X
+  const maxX = SVG_WIDTH - CHART_PADDING_X
+  const GAP = 4 // minimum gap between adjacent label edges
+
+  const items = points.map((pt) => {
+    const halfW = measureLabelWidth(pt.description) / 2
+    const naturalX = Math.max(minX + halfW, Math.min(maxX - halfW, pt.cx))
+    return { id: pt.id, cx: pt.cx, cy: pt.cy, halfW, labelX: naturalX, naturalX }
+  })
+
+  // Work in sorted order so each pass only needs to check neighbours
+  items.sort((a, b) => a.naturalX - b.naturalX)
+
+  for (let pass = 0; pass < 30; pass++) {
+    let moved = false
+    for (let i = 0; i < items.length - 1; i++) {
+      const a = items[i]
+      const b = items[i + 1]
+      const needed = a.halfW + b.halfW + GAP
+      const actual = b.labelX - a.labelX
+      if (actual < needed) {
+        const push = (needed - actual) / 2
+        a.labelX -= push
+        b.labelX += push
+        moved = true
+      }
+    }
+    if (!moved) break
+    // Clamp to chart bounds after each pass
+    for (const item of items) {
+      item.labelX = Math.max(minX + item.halfW, Math.min(maxX - item.halfW, item.labelX))
+    }
+  }
+
+  return items.map((item) => ({
+    id: item.id,
+    labelX: item.labelX,
+    labelY: item.cy - LABEL_OFFSET,
+    cx: item.cx,
+    cy: item.cy,
+    hasConnector: Math.abs(item.labelX - item.naturalX) > 8,
+  }))
 }

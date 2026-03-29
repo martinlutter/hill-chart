@@ -9,12 +9,11 @@ import {
   BASELINE_Y,
   PEAK_HEIGHT,
   CHART_PADDING_X,
-  measureLabelWidth,
+  resolveLabels,
 } from '../hill-chart/hillMath.js'
 
 const INLINE_MARKER = 'data-hillchart-inline'
 const POINT_RADIUS = 10
-const LABEL_OFFSET = 16
 
 export const EDIT_INLINE_EVENT = 'hillchart:edit-inline'
 
@@ -148,11 +147,33 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
   svg.appendChild(rightLabel)
 
   // Points
+  const layouts = resolveLabels(
+    points.map((pt) => ({
+      id: pt.id,
+      cx: percentToSvgX(pt.x),
+      cy: hillY(pt.x, BASELINE_Y, PEAK_HEIGHT),
+      description: pt.description,
+    })),
+  )
+  const layoutMap = new Map(layouts.map((l) => [l.id, l]))
+
   for (const pt of points) {
-    const cx = percentToSvgX(pt.x)
-    const cy = hillY(pt.x, BASELINE_Y, PEAK_HEIGHT)
+    const { cx, cy, labelX, labelY, hasConnector } = layoutMap.get(pt.id)!
     const g = svgEl('g')
     g.setAttribute('data-point-id', pt.id)
+
+    if (hasConnector) {
+      const connector = svgEl('line', {
+        x1: String(labelX),
+        y1: String(labelY + 2),
+        x2: String(cx),
+        y2: String(cy - POINT_RADIUS - 2),
+        stroke: '#8b949e',
+        'stroke-width': '1',
+        opacity: '0.6',
+      })
+      g.appendChild(connector)
+    }
 
     const circle = svgEl('circle', {
       cx: String(cx),
@@ -164,16 +185,9 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
     })
     g.appendChild(circle)
 
-    // Clamp the label center so the text stays within the chart.
-    // As the point nears an edge the label smoothly lags behind the point.
-    const labelHalfWidth = measureLabelWidth(pt.description) / 2
-    const labelX = Math.max(
-      CHART_PADDING_X + labelHalfWidth,
-      Math.min(SVG_WIDTH - CHART_PADDING_X - labelHalfWidth, cx),
-    )
     const label = svgEl('text', {
       x: String(labelX),
-      y: String(cy - LABEL_OFFSET),
+      y: String(labelY),
       'text-anchor': 'middle',
       'font-size': '11',
       fill: '#e6edf3',

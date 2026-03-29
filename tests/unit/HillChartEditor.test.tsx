@@ -105,4 +105,29 @@ describe('HillChartEditor', () => {
     expect(getByText(/figuring things out/i)).toBeDefined()
     expect(getByText(/making it happen/i)).toBeDefined()
   })
+
+  it('renders no connector lines for well-separated points', () => {
+    const points = [
+      makePoint({ id: 'a', description: 'Left', x: 5 }),
+      makePoint({ id: 'b', description: 'Right', x: 95 }),
+    ]
+    render(<HillChartEditor points={points} onChange={() => {}} />)
+    // Connector lines live inside g[data-point-id]; baseline/divider lines are outside
+    const pointGroups = document.querySelectorAll('g[data-point-id]')
+    let connectorCount = 0
+    pointGroups.forEach((g) => { connectorCount += g.querySelectorAll('line').length })
+    expect(connectorCount).toBe(0)
+  })
+
+  it('renders connector lines when two points are stacked at the same position', () => {
+    const points = [
+      makePoint({ id: 'a', description: 'Overlap', x: 50 }),
+      makePoint({ id: 'b', description: 'Overlap', x: 50 }),
+    ]
+    render(<HillChartEditor points={points} onChange={() => {}} />)
+    const pointGroups = document.querySelectorAll('g[data-point-id]')
+    let connectorCount = 0
+    pointGroups.forEach((g) => { connectorCount += g.querySelectorAll('line').length })
+    expect(connectorCount).toBeGreaterThan(0)
+  })
 })

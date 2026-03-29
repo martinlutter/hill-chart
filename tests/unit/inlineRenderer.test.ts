@@ -90,6 +90,29 @@ describe('buildInlineChartSvg', () => {
     expect(parseFloat(label.getAttribute('x')!)).toBe(parseFloat(circle.getAttribute('cx')!))
   })
 
+  it('two well-separated points have no connector lines', () => {
+    const svg = buildInlineChartSvg([
+      { id: 'a', description: 'Left', x: 5, y: 0, color: '#f00' },
+      { id: 'b', description: 'Right', x: 95, y: 0, color: '#0f0' },
+    ])
+    // Connector lines live inside g[data-point-id] elements
+    const pointGroups = svg.querySelectorAll('g[data-point-id]')
+    let connectorCount = 0
+    pointGroups.forEach((g) => { connectorCount += g.querySelectorAll('line').length })
+    expect(connectorCount).toBe(0)
+  })
+
+  it('two overlapping points produce connector lines for the displaced labels', () => {
+    const svg = buildInlineChartSvg([
+      { id: 'a', description: 'Overlap', x: 50, y: 0, color: '#f00' },
+      { id: 'b', description: 'Overlap', x: 50, y: 0, color: '#0f0' },
+    ])
+    const pointGroups = svg.querySelectorAll('g[data-point-id]')
+    let connectorCount = 0
+    pointGroups.forEach((g) => { connectorCount += g.querySelectorAll('line').length })
+    expect(connectorCount).toBeGreaterThan(0)
+  })
+
   it('label x moves gradually as point moves from center toward left edge', () => {
     const xAt = (pct: number) => {
       const svg = buildInlineChartSvg([{ id: 'p', description: 'Label', x: pct, y: 0, color: '#f00' }])
