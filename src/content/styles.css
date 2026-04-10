@@ -1,11 +1,41 @@
-/* Hill Chart widget — scoped inside Shadow DOM, GitHub dark-theme palette */
+/* Hill Chart widget — scoped inside Shadow DOM */
 
 :host {
+  /* ── Dark theme (default) ─────────────────────────────────────────────── */
+  --hc-bg:                #161b22;
+  --hc-surface:           #0d1117;
+  --hc-border:            #30363d;
+  --hc-text:              #e6edf3;
+  --hc-text-muted:        #8b949e;
+  --hc-btn-secondary-bg:  #21262d;
+  --hc-btn-secondary-hover: #30363d;
+  --hc-hill-stroke:       #30363d;
+  --hc-focus-border:      #58a6ff;
+  --hc-point-halo:        #0d1117;
+  --hc-error:             #f85149;
+  --hc-delete-hover:      #f85149;
+
   all: initial;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
   font-size: 14px;
-  color: #e6edf3;
+  color: var(--hc-text);
   box-sizing: border-box;
+}
+
+:host(.light-theme) {
+  /* ── Light theme overrides ──────────────────────────────────────────────── */
+  --hc-bg:                #ffffff;
+  --hc-surface:           #f6f8fa;
+  --hc-border:            #d0d7de;
+  --hc-text:              #1f2328;
+  --hc-text-muted:        #57606a;
+  --hc-btn-secondary-bg:  #f6f8fa;
+  --hc-btn-secondary-hover: #eaeef2;
+  --hc-hill-stroke:       #d0d7de;
+  --hc-focus-border:      #0969da;
+  --hc-point-halo:        #ffffff;
+  --hc-error:             #cf222e;
+  --hc-delete-hover:      #cf222e;
 }
 
 *,
@@ -38,8 +68,8 @@ dialog.hillchart-panel::backdrop {
   width: 680px;
   max-width: 100vw;
   height: 100vh;
-  background: #161b22;
-  border-left: 1px solid #30363d;
+  background: var(--hc-bg);
+  border-left: 1px solid var(--hc-border);
   display: flex;
   flex-direction: column;
   z-index: 999999;
@@ -51,26 +81,26 @@ dialog.hillchart-panel::backdrop {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid #30363d;
+  border-bottom: 1px solid var(--hc-border);
 }
 
 .hillchart-panel-title {
   font-size: 16px;
   font-weight: 600;
-  color: #e6edf3;
+  color: var(--hc-text);
 }
 
 .hillchart-panel-close {
   background: none;
   border: none;
-  color: #8b949e;
+  color: var(--hc-text-muted);
   cursor: pointer;
   font-size: 20px;
   line-height: 1;
   padding: 4px;
 }
 
-.hillchart-panel-close:hover { color: #e6edf3; }
+.hillchart-panel-close:hover { color: var(--hc-text); }
 
 .hillchart-panel-body {
   flex: 1;
@@ -83,7 +113,7 @@ dialog.hillchart-panel::backdrop {
 
 .hillchart-panel-footer {
   padding: 12px 16px;
-  border-top: 1px solid #30363d;
+  border-top: 1px solid var(--hc-border);
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -103,12 +133,12 @@ dialog.hillchart-panel::backdrop {
 }
 
 .btn-secondary {
-  color: #e6edf3;
-  background-color: #21262d;
-  border-color: #30363d;
+  color: var(--hc-text);
+  background-color: var(--hc-btn-secondary-bg);
+  border-color: var(--hc-border);
 }
 
-.btn-secondary:hover { background-color: #30363d; }
+.btn-secondary:hover { background-color: var(--hc-btn-secondary-hover); }
 
 .btn-primary {
   color: #ffffff;
@@ -132,16 +162,47 @@ dialog.hillchart-panel::backdrop {
   margin: 8px auto 0;
   padding: 4px 12px;
   font-size: 12px;
-  color: #8b949e;
+  color: var(--hc-text-muted);
   background: none;
-  border: 1px solid #30363d;
+  border: 1px solid var(--hc-border);
   border-radius: 6px;
   cursor: pointer;
 }
 
 .hillchart-edit-btn:hover {
-  color: #e6edf3;
-  border-color: #8b949e;
+  color: var(--hc-text);
+  border-color: var(--hc-text-muted);
+}
+
+/* SVG structural elements */
+.hill-curve {
+  stroke: var(--hc-hill-stroke);
+}
+
+.hill-baseline {
+  stroke: var(--hc-hill-stroke);
+}
+
+.hill-divider {
+  stroke: var(--hc-hill-stroke);
+}
+
+.hill-phase-label {
+  fill: var(--hc-text-muted);
+}
+
+.hill-point-label {
+  fill: var(--hc-text);
+}
+
+.hill-point-circle {
+  stroke: var(--hc-point-halo);
+  stroke-width: 1.5;
+}
+
+.hill-point.is-dragging .hill-point-circle {
+  stroke: var(--hc-text);
+  stroke-width: 2.5;
 }
 
 /* ── Point list ─────────────────────────────────────────────────────────── */
@@ -156,7 +217,7 @@ dialog.hillchart-panel::backdrop {
 
 .point-list-empty {
   font-size: 12px;
-  color: #8b949e;
+  color: var(--hc-text-muted);
   margin: 0;
 }
 
@@ -170,7 +231,7 @@ dialog.hillchart-panel::backdrop {
   width: 28px;
   height: 28px;
   padding: 2px;
-  border: 1px solid #30363d;
+  border: 1px solid var(--hc-border);
   border-radius: 4px;
   background: none;
   cursor: pointer;
@@ -182,21 +243,21 @@ dialog.hillchart-panel::backdrop {
   min-width: 0;
   padding: 4px 8px;
   font-size: 13px;
-  color: #e6edf3;
-  background: #0d1117;
-  border: 1px solid #30363d;
+  color: var(--hc-text);
+  background: var(--hc-surface);
+  border: 1px solid var(--hc-border);
   border-radius: 6px;
 }
 
 .point-item-label:focus {
   outline: none;
-  border-color: #58a6ff;
+  border-color: var(--hc-focus-border);
 }
 
 .point-item-delete {
   background: none;
   border: none;
-  color: #8b949e;
+  color: var(--hc-text-muted);
   font-size: 18px;
   line-height: 1;
   padding: 2px 6px;
@@ -205,7 +266,7 @@ dialog.hillchart-panel::backdrop {
   flex-shrink: 0;
 }
 
-.point-item-delete:hover { color: #f85149; }
+.point-item-delete:hover { color: var(--hc-delete-hover); }
 
 /* ── Add point form ──────────────────────────────────────────────────────── */
 .add-point-form {
@@ -213,7 +274,7 @@ dialog.hillchart-panel::backdrop {
   align-items: center;
   gap: 8px;
   padding-top: 8px;
-  border-top: 1px solid #30363d;
+  border-top: 1px solid var(--hc-border);
 }
 
 .add-point-label {
@@ -221,24 +282,24 @@ dialog.hillchart-panel::backdrop {
   min-width: 0;
   padding: 4px 8px;
   font-size: 13px;
-  color: #e6edf3;
-  background: #0d1117;
-  border: 1px solid #30363d;
+  color: var(--hc-text);
+  background: var(--hc-surface);
+  border: 1px solid var(--hc-border);
   border-radius: 6px;
 }
 
-.add-point-label::placeholder { color: #8b949e; }
+.add-point-label::placeholder { color: var(--hc-text-muted); }
 
 .add-point-label:focus {
   outline: none;
-  border-color: #58a6ff;
+  border-color: var(--hc-focus-border);
 }
 
 .add-point-color {
   width: 28px;
   height: 28px;
   padding: 2px;
-  border: 1px solid #30363d;
+  border: 1px solid var(--hc-border);
   border-radius: 4px;
   background: none;
   cursor: pointer;
@@ -252,9 +313,9 @@ dialog.hillchart-panel::backdrop {
 /* ── Status / error messages ────────────────────────────────────────────── */
 .hillchart-status {
   font-size: 12px;
-  color: #8b949e;
+  color: var(--hc-text-muted);
   text-align: center;
   padding: 4px 0;
 }
 
-.hillchart-status-error { color: #f85149; }
+.hillchart-status-error { color: var(--hc-error); }

@@ -128,15 +128,75 @@ describe('buildInlineChartSvg', () => {
     expect(x25).toBeGreaterThanOrEqual(x10)
     expect(x10).toBeGreaterThanOrEqual(x0)
   })
+
+  describe('theming', () => {
+    it('dark theme: hill curve uses dark border color', () => {
+      const svg = buildInlineChartSvg(SAMPLE_POINTS, 'dark')
+      const path = svg.querySelector('path')!
+      expect(path.getAttribute('stroke')).toBe('#30363d')
+    })
+
+    it('light theme: hill curve uses light border color', () => {
+      const svg = buildInlineChartSvg(SAMPLE_POINTS, 'light')
+      const path = svg.querySelector('path')!
+      expect(path.getAttribute('stroke')).toBe('#d0d7de')
+    })
+
+    it('dark theme: phase labels use dark muted text color', () => {
+      const svg = buildInlineChartSvg(SAMPLE_POINTS, 'dark')
+      const phaseLabel = Array.from(svg.querySelectorAll('text')).find(
+        (t) => t.textContent === 'Figuring things out',
+      )!
+      expect(phaseLabel.getAttribute('fill')).toBe('#8b949e')
+    })
+
+    it('light theme: phase labels use light muted text color', () => {
+      const svg = buildInlineChartSvg(SAMPLE_POINTS, 'light')
+      const phaseLabel = Array.from(svg.querySelectorAll('text')).find(
+        (t) => t.textContent === 'Figuring things out',
+      )!
+      expect(phaseLabel.getAttribute('fill')).toBe('#57606a')
+    })
+
+    it('dark theme: point labels use dark text color', () => {
+      const svg = buildInlineChartSvg(SAMPLE_POINTS, 'dark')
+      const pointLabel = Array.from(svg.querySelectorAll('text')).find(
+        (t) => t.textContent === 'Login flow',
+      )!
+      expect(pointLabel.getAttribute('fill')).toBe('#e6edf3')
+    })
+
+    it('light theme: point labels use light text color', () => {
+      const svg = buildInlineChartSvg(SAMPLE_POINTS, 'light')
+      const pointLabel = Array.from(svg.querySelectorAll('text')).find(
+        (t) => t.textContent === 'Login flow',
+      )!
+      expect(pointLabel.getAttribute('fill')).toBe('#1f2328')
+    })
+
+    it('dark theme: circle halo uses dark surface color', () => {
+      const svg = buildInlineChartSvg(SAMPLE_POINTS, 'dark')
+      const circle = svg.querySelector('circle')!
+      expect(circle.getAttribute('stroke')).toBe('#0d1117')
+    })
+
+    it('light theme: circle halo uses white surface color', () => {
+      const svg = buildInlineChartSvg(SAMPLE_POINTS, 'light')
+      const circle = svg.querySelector('circle')!
+      expect(circle.getAttribute('stroke')).toBe('#ffffff')
+    })
+  })
 })
 
 describe('renderInlineCharts', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
+    document.documentElement.removeAttribute('data-color-mode')
   })
 
   afterEach(() => {
     document.body.innerHTML = ''
+    document.documentElement.removeAttribute('data-color-mode')
   })
 
   it('replaces a <pre lang="hillchart"> block with an inline chart', () => {
@@ -342,15 +402,71 @@ describe('renderInlineCharts', () => {
     cleanup()
     expect(document.querySelector('[data-testid="hillchart-inline-edit"]')).toBeNull()
   })
+
+  describe('theming', () => {
+    it('dark theme: SVG hill curve uses dark border color', () => {
+      document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+      const cleanup = renderInlineCharts('dark')
+      const path = document.querySelector('[data-testid="hillchart-inline"] svg path')!
+      expect(path.getAttribute('stroke')).toBe('#30363d')
+      cleanup()
+    })
+
+    it('light theme: SVG hill curve uses light border color', () => {
+      document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+      const cleanup = renderInlineCharts('light')
+      const path = document.querySelector('[data-testid="hillchart-inline"] svg path')!
+      expect(path.getAttribute('stroke')).toBe('#d0d7de')
+      cleanup()
+    })
+
+    it('dark theme: SVG point labels use dark text color', () => {
+      document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+      const cleanup = renderInlineCharts('dark')
+      const label = Array.from(
+        document.querySelectorAll('[data-testid="hillchart-inline"] svg text'),
+      ).find((t) => t.textContent === 'Login flow')!
+      expect(label.getAttribute('fill')).toBe('#e6edf3')
+      cleanup()
+    })
+
+    it('light theme: SVG point labels use light text color', () => {
+      document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+      const cleanup = renderInlineCharts('light')
+      const label = Array.from(
+        document.querySelectorAll('[data-testid="hillchart-inline"] svg text'),
+      ).find((t) => t.textContent === 'Login flow')!
+      expect(label.getAttribute('fill')).toBe('#1f2328')
+      cleanup()
+    })
+
+    it('auto-detects light theme from data-color-mode attribute', () => {
+      document.documentElement.setAttribute('data-color-mode', 'light')
+      document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+      const cleanup = renderInlineCharts()
+      const path = document.querySelector('[data-testid="hillchart-inline"] svg path')!
+      expect(path.getAttribute('stroke')).toBe('#d0d7de')
+      cleanup()
+    })
+  })
 })
 
 describe('observeInlineCharts', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
+    document.documentElement.removeAttribute('data-color-mode')
   })
 
   afterEach(() => {
     document.body.innerHTML = ''
+    document.documentElement.removeAttribute('data-color-mode')
+  })
+
+  it('renders existing hillchart blocks immediately on call', () => {
+    document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+    const cleanup = observeInlineCharts()
+    expect(document.querySelector('[data-testid="hillchart-inline"]')).not.toBeNull()
+    cleanup()
   })
 
   it('renders a chart when a pre[lang="hillchart"] is dynamically added', async () => {
@@ -430,5 +546,32 @@ describe('observeInlineCharts', () => {
     expect(document.querySelector('[data-testid="hillchart-inline"]')).not.toBeNull()
     cleanup()
     expect(document.querySelector('[data-testid="hillchart-inline"]')).toBeNull()
+  })
+
+  it('re-renders with new theme when data-color-mode changes', async () => {
+    document.documentElement.setAttribute('data-color-mode', 'dark')
+    document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+    const cleanup = observeInlineCharts()
+
+    // Verify dark theme initially
+    let path = document.querySelector('[data-testid="hillchart-inline"] svg path')!
+    expect(path.getAttribute('stroke')).toBe('#30363d')
+
+    // Switch to light theme
+    document.documentElement.setAttribute('data-color-mode', 'light')
+    await Promise.resolve()
+
+    path = document.querySelector('[data-testid="hillchart-inline"] svg path')!
+    expect(path.getAttribute('stroke')).toBe('#d0d7de')
+
+    cleanup()
+  })
+
+  it('cleanup removes charts rendered initially on call', () => {
+    document.body.innerHTML = `<div>${PRE_BLOCK}</div>`
+    const cleanup = observeInlineCharts()
+    expect(document.querySelectorAll('[data-testid="hillchart-inline"]')).toHaveLength(1)
+    cleanup()
+    expect(document.querySelectorAll('[data-testid="hillchart-inline"]')).toHaveLength(0)
   })
 })

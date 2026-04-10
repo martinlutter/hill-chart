@@ -8,7 +8,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { detectIssuePage, observeIssuePage } from '../github/detector.js'
 import { setupNavigation } from '../github/navigation.js'
-import { renderInlineCharts, observeInlineCharts } from '../github/inlineRenderer.js'
+import { observeInlineCharts } from '../github/inlineRenderer.js'
 import { HillChartWidget } from '../components/HillChartWidget.js'
 import styles from './styles.css?inline'
 
@@ -83,7 +83,6 @@ function mount(): () => void {
 
   renderWidget(page.toolbarAnchor, page.issueBodyText)
 
-  const cleanupInline = renderInlineCharts()
   const cleanupObserver = observeInlineCharts()
 
   // Watch for the toolbar anchor to appear or change (e.g. GitHub React
@@ -99,7 +98,6 @@ function mount(): () => void {
     }
     cleanupRetry()
     cleanupObserver()
-    cleanupInline()
     root.unmount()
     host.remove()
   }

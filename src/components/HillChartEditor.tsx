@@ -95,7 +95,7 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
           y1={BASELINE_Y}
           x2={SVG_WIDTH - CHART_PADDING_X}
           y2={BASELINE_Y}
-          stroke="#30363d"
+          className="hill-baseline"
           strokeWidth="1"
         />
 
@@ -117,7 +117,7 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
           y={SVG_HEIGHT - 4}
           textAnchor="middle"
           fontSize="11"
-          fill="#8b949e"
+          className="hill-phase-label"
         >
           Figuring things out
         </text>
@@ -126,7 +126,7 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
           y={SVG_HEIGHT - 4}
           textAnchor="middle"
           fontSize="11"
-          fill="#8b949e"
+          className="hill-phase-label"
         >
           Making it happen
         </text>
@@ -149,7 +149,7 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
             return (
               <g
                 key={pt.id}
-                className="hill-point"
+                className={`hill-point${isDragging ? ' is-dragging' : ''}`}
                 data-point-id={pt.id}
                 style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
               >
@@ -178,8 +178,7 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
                   cy={cy}
                   r={POINT_RADIUS}
                   fill={pt.color}
-                  stroke={isDragging ? '#e6edf3' : '#0d1117'}
-                  strokeWidth={isDragging ? 2.5 : 1.5}
+                  className="hill-point-circle"
                   pointerEvents="none"
                 />
                 <text
@@ -187,7 +186,6 @@ export function HillChartEditor({ points, onChange }: HillChartEditorProps) {
                   y={labelY}
                   textAnchor="middle"
                   fontSize="11"
-                  fill="#e6edf3"
                   pointerEvents="none"
                   className="hill-point-label"
                 >

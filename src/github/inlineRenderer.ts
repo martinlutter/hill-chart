@@ -11,6 +11,7 @@ import {
   CHART_PADDING_X,
   resolveLabels,
 } from '../hill-chart/hillMath.js'
+import { type Theme, detectGitHubTheme } from '../utils/theme.js'
 
 const INLINE_MARKER = 'data-hillchart-inline'
 const POINT_RADIUS = 10
@@ -18,6 +19,25 @@ const POINT_RADIUS = 10
 export const EDIT_INLINE_EVENT = 'hillchart:edit-inline'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
+
+const THEME_COLORS = {
+  dark: {
+    bg: '#161b22',
+    border: '#30363d',
+    text: '#e6edf3',
+    textMuted: '#8b949e',
+    btnBg: '#21262d',
+    pointHalo: '#0d1117',
+  },
+  light: {
+    bg: '#ffffff',
+    border: '#d0d7de',
+    text: '#1f2328',
+    textMuted: '#57606a',
+    btnBg: '#f6f8fa',
+    pointHalo: '#ffffff',
+  },
+} as const
 
 function svgEl<K extends keyof SVGElementTagNameMap>(
   tag: K,
@@ -44,7 +64,10 @@ function buildPencilIcon(): SVGSVGElement {
   return svg
 }
 
-function buildEditButton(points: HillPoint[]): HTMLButtonElement {
+function buildEditButton(
+  points: HillPoint[],
+  colors: (typeof THEME_COLORS)[Theme],
+): HTMLButtonElement {
   const btn = document.createElement('button')
   btn.setAttribute('data-testid', 'hillchart-inline-edit')
   btn.setAttribute('aria-label', 'Edit hill chart')
@@ -58,20 +81,20 @@ function buildEditButton(points: HillPoint[]): HTMLButtonElement {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#21262d',
-    border: '1px solid #30363d',
+    background: colors.btnBg,
+    border: `1px solid ${colors.border}`,
     borderRadius: '6px',
-    color: '#8b949e',
+    color: colors.textMuted,
     cursor: 'pointer',
     opacity: '0',
     transition: 'opacity 0.15s',
     padding: '0',
   })
   btn.addEventListener('mouseenter', () => {
-    btn.style.color = '#e6edf3'
+    btn.style.color = colors.text
   })
   btn.addEventListener('mouseleave', () => {
-    btn.style.color = '#8b949e'
+    btn.style.color = colors.textMuted
   })
   btn.addEventListener('click', (e) => {
     e.stopPropagation()
@@ -82,7 +105,12 @@ function buildEditButton(points: HillPoint[]): HTMLButtonElement {
   return btn
 }
 
-export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
+export function buildInlineChartSvg(
+  points: HillPoint[],
+  theme: Theme = detectGitHubTheme(),
+): SVGSVGElement {
+  const colors = THEME_COLORS[theme]
+
   const svg = svgEl('svg', {
     viewBox: `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`,
     'aria-label': 'Hill chart',
@@ -96,7 +124,7 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
   const path = svgEl('path', {
     d: buildHillPath(),
     fill: 'none',
-    stroke: '#30363d',
+    stroke: colors.border,
     'stroke-width': '2',
   })
   svg.appendChild(path)
@@ -107,7 +135,7 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
     y1: String(BASELINE_Y),
     x2: String(SVG_WIDTH - CHART_PADDING_X),
     y2: String(BASELINE_Y),
-    stroke: '#30363d',
+    stroke: colors.border,
     'stroke-width': '1',
   })
   svg.appendChild(baseline)
@@ -119,7 +147,7 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
     y1: '0',
     x2: String(midX),
     y2: String(BASELINE_Y),
-    stroke: '#30363d',
+    stroke: colors.border,
     'stroke-width': '1',
     'stroke-dasharray': '4 4',
   })
@@ -131,7 +159,7 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
     y: String(SVG_HEIGHT - 4),
     'text-anchor': 'middle',
     'font-size': '11',
-    fill: '#8b949e',
+    fill: colors.textMuted,
   })
   leftLabel.textContent = 'Figuring things out'
   svg.appendChild(leftLabel)
@@ -141,7 +169,7 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
     y: String(SVG_HEIGHT - 4),
     'text-anchor': 'middle',
     'font-size': '11',
-    fill: '#8b949e',
+    fill: colors.textMuted,
   })
   rightLabel.textContent = 'Making it happen'
   svg.appendChild(rightLabel)
@@ -168,7 +196,7 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
         y1: String(labelY + 2),
         x2: String(cx),
         y2: String(cy - POINT_RADIUS - 2),
-        stroke: '#8b949e',
+        stroke: colors.textMuted,
         'stroke-width': '1',
         opacity: '0.6',
       })
@@ -180,7 +208,7 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
       cy: String(cy),
       r: String(POINT_RADIUS),
       fill: pt.color,
-      stroke: '#0d1117',
+      stroke: colors.pointHalo,
       'stroke-width': '1.5',
     })
     g.appendChild(circle)
@@ -190,7 +218,7 @@ export function buildInlineChartSvg(points: HillPoint[]): SVGSVGElement {
       y: String(labelY),
       'text-anchor': 'middle',
       'font-size': '11',
-      fill: '#e6edf3',
+      fill: colors.text,
     })
     label.textContent = pt.description
     g.appendChild(label)
@@ -240,35 +268,6 @@ function findHideTarget(pre: HTMLElement): HTMLElement {
 }
 
 /**
- * Watches for dynamically added hillchart code blocks (e.g. new comments, soft-nav late loads)
- * and renders them as inline SVG charts.
- * Returns a cleanup function that disconnects the observer and restores any replaced blocks.
- */
-export function observeInlineCharts(): () => void {
-  const cleanups: (() => void)[] = []
-
-  const observer = new MutationObserver((mutations) => {
-    const hasNewPre = mutations.some((m) =>
-      Array.from(m.addedNodes).some(
-        (node) =>
-          node instanceof Element &&
-          (node.matches('pre[lang="hillchart"]') ||
-            node.querySelector('pre[lang="hillchart"]') !== null),
-      ),
-    )
-    if (!hasNewPre) return
-    cleanups.push(renderInlineCharts())
-  })
-
-  observer.observe(document.body, { childList: true, subtree: true })
-
-  return () => {
-    observer.disconnect()
-    for (const cleanup of cleanups) cleanup()
-  }
-}
-
-/**
  * Finds rendered hillchart code blocks on the page and replaces them with SVG charts.
  *
  * GitHub renders ```hillchart fenced blocks as:
@@ -279,8 +278,9 @@ export function observeInlineCharts(): () => void {
  *
  * Returns a cleanup function that restores the original code blocks.
  */
-export function renderInlineCharts(): () => void {
+export function renderInlineCharts(theme: Theme = detectGitHubTheme()): () => void {
   const replaced: { wrapper: HTMLElement; hideTarget: HTMLElement }[] = []
+  const colors = THEME_COLORS[theme]
 
   const codeBlocks = document.querySelectorAll<HTMLElement>(
     'pre[lang="hillchart"]',
@@ -302,15 +302,15 @@ export function renderInlineCharts(): () => void {
     wrapper.style.display = 'inline-block'
     wrapper.style.margin = '16px 0 8px'
     wrapper.style.padding = '12px'
-    wrapper.style.background = '#161b22'
-    wrapper.style.border = '1px solid #30363d'
+    wrapper.style.background = colors.bg
+    wrapper.style.border = `1px solid ${colors.border}`
     wrapper.style.borderRadius = '6px'
     wrapper.style.position = 'relative'
 
-    const svg = buildInlineChartSvg(result.data.points)
+    const svg = buildInlineChartSvg(result.data.points, theme)
     wrapper.appendChild(svg)
 
-    const editBtn = buildEditButton(result.data.points)
+    const editBtn = buildEditButton(result.data.points, colors)
     wrapper.appendChild(editBtn)
     wrapper.addEventListener('mouseenter', () => {
       editBtn.style.opacity = '1'
@@ -330,5 +330,50 @@ export function renderInlineCharts(): () => void {
       hideTarget.style.display = ''
       wrapper.remove()
     }
+  }
+}
+
+/**
+ * Renders all hillchart code blocks on the page and watches for:
+ *   - Dynamically added blocks (e.g. new comments, soft-nav late loads)
+ *   - GitHub theme changes (data-color-mode attribute on <html>)
+ *
+ * Re-renders all charts whenever the theme changes.
+ * Returns a cleanup function that disconnects observers and restores replaced blocks.
+ */
+export function observeInlineCharts(): () => void {
+  let currentCleanup: (() => void) = renderInlineCharts()
+
+  function refresh() {
+    currentCleanup()
+    currentCleanup = renderInlineCharts()
+  }
+
+  // Watch for dynamically added hillchart code blocks
+  const domObserver = new MutationObserver((mutations) => {
+    const hasNewPre = mutations.some((m) =>
+      Array.from(m.addedNodes).some(
+        (node) =>
+          node instanceof Element &&
+          (node.matches('pre[lang="hillchart"]') ||
+            node.querySelector('pre[lang="hillchart"]') !== null),
+      ),
+    )
+    if (!hasNewPre) return
+    refresh()
+  })
+  domObserver.observe(document.body, { childList: true, subtree: true })
+
+  // Watch for GitHub theme changes (user switches theme in settings)
+  const themeObserver = new MutationObserver(() => refresh())
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-color-mode'],
+  })
+
+  return () => {
+    domObserver.disconnect()
+    themeObserver.disconnect()
+    currentCleanup()
   }
 }

@@ -10,6 +10,7 @@ import { AddPointForm } from './AddPointForm.js'
 import { useHillChartReducer } from '../hooks/useHillChartReducer.js'
 import { useDialogSync } from '../hooks/useDialogSync.js'
 import { useInlineEditListener } from '../hooks/useInlineEditListener.js'
+import { useTheme } from '../hooks/useTheme.js'
 
 export interface HillChartWidgetProps {
   /** Raw innerHTML of the first issue body — contains the hillchart HTML comment block */
@@ -25,6 +26,7 @@ export function HillChartWidget({
   const [state, dispatch] = useHillChartReducer(issueBodyText)
   const { panelState, draftPoints, errorMsg } = state
   const dialogRef = useRef<HTMLDialogElement>(null)
+  useTheme()
 
   // ── Hooks ─────────────────────────────────────────────────────────────────
   const onDialogCancel = useCallback(() => dispatch({ type: 'CLOSE' }), [dispatch])
